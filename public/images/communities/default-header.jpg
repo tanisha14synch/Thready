@@ -1,0 +1,8 @@
+<!-- SVG representation of a default header image -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300">
+  <rect width="1200" height="300" fill="#4A76A8"/>
+  <rect x="0" y="0" width="1200" height="300" fill="#4A76A8"/>
+  <path d="M0,240 Q300,180 600,240 T1200,240 L1200,300 L0,300 Z" fill="#3D6293"/>
+  <path d="M0,260 Q300,200 600,260 T1200,260 L1200,300 L0,300 Z" fill="#325180"/>
+  <circle cx="1000" cy="80" r="40" fill="#FFF" opacity="0.3"/>
+</svg>

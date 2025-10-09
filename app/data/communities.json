@@ -1,0 +1,126 @@
+[
+  {
+    "id": "the_bar_wardrobe",
+    "name": "r/The_Bar_Wardrobe",
+    "description": "A community for lawyers to discuss professional attire and courtroom excellence",
+    "headerImage": "/lawyer.jpg",
+    "icon": "/lawyer.jpg",
+    "members": 12500,
+    "online": 235,
+    "createdDate": "2015-09-25",
+    "isPublic": true,
+    "moderators": [
+      { "username": "Euphoric_Dog3935", "avatar": "https://i.pravatar.cc/50?img=1" }
+    ],
+    "tags": ["lawyers", "community"],
+    "posts": [
+      {
+        "id": "post1",
+        "user": "LawyerJane",
+        "avatar": "https://i.pravatar.cc/50?img=10",
+        "postedAt": "2 hours ago",
+        "title": "Best courtroom shoes for long sessions?",
+        "image": "/lawyer.jpg",
+        "video": "",
+        "upvotes": 120,
+        "comments": 45,
+        "shareable": true
+      },
+      {
+        "id": "post2",
+        "user": "LegalEagle",
+        "avatar": "/lawyer.jpg",
+        "postedAt": "5 hours ago",
+        "title": "Tips for a sharp and professional look in court",
+        "image": "/images/posts/professional_attire.jpg",
+        "video": "",
+        "upvotes": 95,
+        "comments": 20,
+        "shareable": true
+      }
+    ]
+  },
+  {
+    "id": "gaming",
+    "name": "r/gaming",
+    "description": "A place for everything gaming-related",
+    "headerImage": "/ciniema.jpg",
+    "icon": "/images/communities/gaming_icon.jpg",
+    "members": 34500000,
+    "online": 42000,
+    "createdDate": "2008-05-12",
+    "isPublic": true,
+    "moderators": [
+      { "username": "GamerMod123", "avatar": "https://i.pravatar.cc/50?img=2" },
+      { "username": "GameMaster456", "avatar": "https://i.pravatar.cc/50?img=3" }
+    ],
+    "tags": ["games", "entertainment"],
+    "posts": [
+      {
+        "id": "post1",
+        "user": "ProGamer99",
+        "avatar": "https://i.pravatar.cc/50?img=12",
+        "postedAt": "30 minutes ago",
+        "title": "New gaming setup tour!",
+        "image": "/ciniema.jpg",
+        "video": "",
+        "upvotes": 450,
+        "comments": 120,
+        "shareable": true
+      },
+      {
+        "id": "post2",
+        "user": "RetroGamer",
+        "avatar": "https://i.pravatar.cc/50?img=13",
+        "postedAt": "1 hour ago",
+        "title": "Best retro games to replay in 2025",
+        "image": "/ciniema.jpg",
+        "video": "",
+        "upvotes": 300,
+        "comments": 75,
+        "shareable": true
+      }
+    ]
+  },
+  {
+    "id": "movies",
+    "name": "r/movies",
+    "description": "News and discussions about major motion pictures",
+    "headerImage": "/ciniema.jpg",
+    "icon": "/ciniema.jpg",
+    "members": 28700000,
+    "online": 31500,
+    "createdDate": "2008-01-25",
+    "isPublic": true,
+    "moderators": [
+      { "username": "FilmBuff42", "avatar": "https://i.pravatar.cc/50?img=4" }
+    ],
+    "tags": ["films", "entertainment", "reviews"],
+    "posts": [
+      {
+        "id": "post1",
+        "user": "MovieFanatic",
+        "avatar": "https://i.pravatar.cc/50?img=14",
+        "postedAt": "3 hours ago",
+        "title": "Thoughts on the latest blockbuster?",
+        "image": "/ciniema.jpg",
+        "video": "",
+        "upvotes": 200,
+        "comments": 65,
+        "shareable": true
+      },
+      {
+        "id": "post2",
+        "user": "CinemaLover",
+        "avatar": "https://i.pravatar.cc/50?img=15",
+        "postedAt": "6 hours ago",
+        "title": "Top 10 movies of the year so far",
+        "image": "/ciniema.jpg",
+        "video": "",
+        "upvotes": 180,
+        "comments": 40,
+        "shareable": true
+      }
+    ]
+  }
+]

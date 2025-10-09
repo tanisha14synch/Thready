@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300">
+  <rect width="1200" height="300" fill="#E50914"/>
+  <path d="M0,240 Q300,180 600,240 T1200,240 L1200,300 L0,300 Z" fill="#B8070F"/>
+  <path d="M0,260 Q300,200 600,260 T1200,260 L1200,300 L0,300 Z" fill="#8B050B"/>
+  <text x="600" y="140" font-family="Arial" font-size="40" fill="white" text-anchor="middle">Movies</text>
+</svg>

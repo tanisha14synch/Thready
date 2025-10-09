@@ -1,0 +1,243 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');
+@import "@fortawesome/fontawesome-free/css/all.css";
+
+:root {
+    /* Theme Configuration */
+    --theme-color: #13544E;
+    --primary-color: #13544E;
+    --secondary-color: #ffffff;
+    --button-color: #13544E;
+    --text-color: #614e4e;
+    --primary-font: 'Libre-Baskerville';
+    --secondary-font: 'Almarai';
+    --green-color: #184E50;
+    --color-primary: var(--primary-color);
+    --font-xs: 	0.75rem;
+    --font-sm: 0.87rem;
+    --font-base: 1.0rem;
+    --font-lg: 	1.25rem;
+    --font-xl: 	1.4rem;
+    /* --font-3xl: 2.5rem; */
+    --font-5xl:3.5rem;
+
+    /* Existing root properties */
+    overscroll-behavior: none;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+}
+.vel__container {
+  background-color: #000 !important;
+}
+
+/* Theme utility classes */
+.bg-theme {
+    background-color: var(--theme-color);
+}
+
+.text-theme {
+    color: var(--theme-color);
+    stroke: var(--theme-color); /* for SVG stroke */
+    fill: var(--theme-color);
+}
+
+.border-theme {
+    border-color: var(--theme-color);
+}
+
+.text-greend {
+    color: var(--green-color);
+}
+
+.bg-greend {
+    background-color: var(--green-color);
+}
+
+.bg-primary {
+    background-color: var(--primary-color);
+}
+
+.text-primary {
+    color: var(--primary-color);
+}
+
+.border-primary {
+    border-color: var(--primary-color);
+}
+
+.bg-secondary {
+    background-color: var(--secondary-color);
+}
+
+.text-secondary {
+    color: var(--secondary-color);
+}
+
+.border-secondary {
+    border-color: var(--secondary-color);
+}
+
+.bg-button {
+    background-color: var(--button-color);
+}
+
+.text-button {
+    color: var(--button-color);
+}
+
+.border-button {
+    border-color: var(--button-color);
+}
+
+.bg-custom {
+    background-color: var(--bg-color);
+}
+
+.text-header {
+    color: var(--bg-color);
+}
+
+.bg-border {
+    border-color: var(--bg-color);
+}
+
+.text-description {
+    color: var(--text-color);
+}
+
+
+.font-primary {
+    font-family: var(--primary-font, 'Libre-Baskerville');
+}
+
+.font-secondary {
+    font-family: var(--secondary-font, 'Almarai');
+}
+.text-xs { font-size: var(--font-xs); }
+  .text-sm { font-size: var(--font-sm); }
+  .text-base { font-size: var(--font-base); }
+  .text-lg { font-size: var(--font-lg); }
+  .text-xl { font-size: var(--font-xl); }
+  .text-3xl{font-size: var(--font-3xl);}
+  .text-5xl{font-size: var(--font-5xl);}
+html,
+body {
+    width: 100vw;
+    overflow-x: hidden;
+    background-color: var(--bg-color);
+}
+
+:root {
+    overscroll-behavior: none;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+}
+
+::-webkit-scrollbar {
+    display: none;
+    width: 0px; /* Changed from 2px to 1px */
+}
+
+::-webkit-scrollbar-track-piece {
+    background-color: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--bg-color);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    overflow-y: scroll;
+}
+
+/* Improve touch handling for iOS */
+.touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Slide from Right to Left */
+@keyframes slide-in-right {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+
+@keyframes fade-in-out {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Apply the animation styles */
+.slide-in-right {
+    animation: slide-in-right 400ms ease-out forwards;
+}
+
+.fade-in-out {
+    animation: fade-in-out 400ms ease-in-out forwards;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@keyframes slideCurtain {
+    0% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(100%);
+        opacity: 1;
+    }
+}
+
+.slide-enter-active {
+    animation: slideCurtain 0.5s ease-out;
+}
+
+.slide-leave-active {
+    animation: slideCurtain 0.5s ease-in reverse;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+    opacity: 0;
+    transform: translateY(0);
+}
+
+.animate-up {
+    opacity: 0;
+    transform: translateY(50px);
+    animation: slideUp 2s forwards;
+}
+
+@keyframes slideUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
