@@ -23,8 +23,43 @@
         "image": "/lawyer.jpg",
         "video": "",
         "upvotes": 120,
-        "comments": 45,
-        "shareable": true
+        "commentsCount": 3,
+        "shareable": true,
+        "comments": [
+          {
+            "id": "c1",
+            "user": "BarristerTom",
+            "avatar": "https://i.pravatar.cc/50?img=22",
+            "commentedAt": "1 hour ago",
+            "text": "I recommend Oxford-style shoes—comfortable yet formal!",
+            "displayedScore": 15,
+            "userVote": 0,
+            "shareable": true,
+            "shareMessage": ""
+          },
+          {
+            "id": "c2",
+            "user": "CourtQueen",
+            "avatar": "https://i.pravatar.cc/50?img=23",
+            "commentedAt": "45 minutes ago",
+            "text": "Totally agree, and polished leather adds that confidence boost.",
+            "displayedScore": 10,
+            "userVote": 1,
+            "shareable": true,
+            "shareMessage": ""
+          },
+          {
+            "id": "c3",
+            "user": "LegalMind",
+            "avatar": "https://i.pravatar.cc/50?img=24",
+            "commentedAt": "30 minutes ago",
+            "text": "I use gel inserts to stay comfortable during long trials!",
+            "displayedScore": 7,
+            "userVote": -1,
+            "shareable": false,
+            "shareMessage": ""
+          }
+        ]
       },
       {
         "id": "post2",
@@ -35,8 +70,32 @@
         "image": "/images/posts/professional_attire.jpg",
         "video": "",
         "upvotes": 95,
-        "comments": 20,
-        "shareable": true
+        "commentsCount": 2,
+        "shareable": true,
+        "comments": [
+          {
+            "id": "c1",
+            "user": "StyleCounsel",
+            "avatar": "https://i.pravatar.cc/50?img=25",
+            "commentedAt": "2 hours ago",
+            "text": "A tailored suit and subtle accessories always win.",
+            "displayedScore": 12,
+            "userVote": 0,
+            "shareable": true,
+            "shareMessage": ""
+          },
+          {
+            "id": "c2",
+            "user": "LawGuru",
+            "avatar": "https://i.pravatar.cc/50?img=26",
+            "commentedAt": "1 hour ago",
+            "text": "Keep it minimal — your arguments should stand out, not your tie.",
+            "displayedScore": 9,
+            "userVote": 1,
+            "shareable": true,
+            "shareMessage": ""
+          }
+        ]
       }
     ]
   },
@@ -65,8 +124,32 @@
         "image": "/ciniema.jpg",
         "video": "",
         "upvotes": 450,
-        "comments": 120,
-        "shareable": true
+        "commentsCount": 2,
+        "shareable": true,
+        "comments": [
+          {
+            "id": "c1",
+            "user": "PixelMaster",
+            "avatar": "https://i.pravatar.cc/50?img=27",
+            "commentedAt": "15 minutes ago",
+            "text": "That RGB setup looks amazing!",
+            "displayedScore": 20,
+            "userVote": 1,
+            "shareable": true,
+            "shareMessage": ""
+          },
+          {
+            "id": "c2",
+            "user": "GameAddict",
+            "avatar": "https://i.pravatar.cc/50?img=28",
+            "commentedAt": "5 minutes ago",
+            "text": "What monitor are you using? Looks super crisp.",
+            "displayedScore": 10,
+            "userVote": 0,
+            "shareable": true,
+            "shareMessage": ""
+          }
+        ]
       },
       {
         "id": "post2",
@@ -77,8 +160,43 @@
         "image": "/ciniema.jpg",
         "video": "",
         "upvotes": 300,
-        "comments": 75,
-        "shareable": true
+        "commentsCount": 3,
+        "shareable": true,
+        "comments": [
+          {
+            "id": "c1",
+            "user": "OldSchoolFan",
+            "avatar": "https://i.pravatar.cc/50?img=29",
+            "commentedAt": "40 minutes ago",
+            "text": "Chrono Trigger never gets old!",
+            "displayedScore": 18,
+            "userVote": 1,
+            "shareable": true,
+            "shareMessage": ""
+          },
+          {
+            "id": "c2",
+            "user": "ArcadeHero",
+            "avatar": "https://i.pravatar.cc/50?img=30",
+            "commentedAt": "25 minutes ago",
+            "text": "Metal Slug all day 😎",
+            "displayedScore": 9,
+            "userVote": 0,
+            "shareable": false,
+            "shareMessage": ""
+          },
+          {
+            "id": "c3",
+            "user": "RetroLover",
+            "avatar": "https://i.pravatar.cc/50?img=31",
+            "commentedAt": "10 minutes ago",
+            "text": "Donkey Kong Country is still top-tier.",
+            "displayedScore": 14,
+            "userVote": -1,
+            "shareable": true,
+            "shareMessage": ""
+          }
+        ]
       }
     ]
   },
@@ -106,8 +224,32 @@
         "image": "/ciniema.jpg",
         "video": "",
         "upvotes": 200,
-        "comments": 65,
-        "shareable": true
+        "commentsCount": 2,
+        "shareable": true,
+        "comments": [
+          {
+            "id": "c1",
+            "user": "FilmCritic",
+            "avatar": "https://i.pravatar.cc/50?img=32",
+            "commentedAt": "2 hours ago",
+            "text": "The pacing was off, but the visuals were top-notch.",
+            "displayedScore": 22,
+            "userVote": 0,
+            "shareable": true,
+            "shareMessage": ""
+          },
+          {
+            "id": "c2",
+            "user": "CinemaGeek",
+            "avatar": "https://i.pravatar.cc/50?img=33",
+            "commentedAt": "1 hour ago",
+            "text": "I loved the soundtrack! Totally immersive experience.",
+            "displayedScore": 18,
+            "userVote": 1,
+            "shareable": true,
+            "shareMessage": ""
+          }
+        ]
       },
       {
         "id": "post2",
@@ -118,8 +260,32 @@
         "image": "/ciniema.jpg",
         "video": "",
         "upvotes": 180,
-        "comments": 40,
-        "shareable": true
+        "commentsCount": 2,
+        "shareable": true,
+        "comments": [
+          {
+            "id": "c1",
+            "user": "ReelReviewer",
+            "avatar": "https://i.pravatar.cc/50?img=34",
+            "commentedAt": "5 hours ago",
+            "text": "Barbie was surprisingly good — strong message and visuals.",
+            "displayedScore": 16,
+            "userVote": 0,
+            "shareable": true,
+            "shareMessage": ""
+          },
+          {
+            "id": "c2",
+            "user": "MovieBuff88",
+            "avatar": "https://i.pravatar.cc/50?img=35",
+            "commentedAt": "4 hours ago",
+            "text": "Oppenheimer is my pick — Nolan nailed it again.",
+            "displayedScore": 20,
+            "userVote": 1,
+            "shareable": true,
+            "shareMessage": ""
+          }
+        ]
       }
     ]
   }
