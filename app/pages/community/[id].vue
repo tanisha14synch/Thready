@@ -44,7 +44,7 @@
     <!-- Main Content -->
     <div class="max-w-full mx-auto px-4  flex flex-wrap flex-col md:flex-row">
       <!-- Posts Column -->
-      <div class="flex-1 space-y-4 lg:min-w-[80%]">
+      <div class="flex-1 space-y-4 lg:min-w-[50%]">
         <PostCard v-for="post in posts" :key="post.id" :post="post" />
       </div>
 
