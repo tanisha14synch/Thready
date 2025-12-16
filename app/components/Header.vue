@@ -7,16 +7,17 @@
           <Menu class="w-6 h-6 text-gray-600" />
         </button>
         <NuxtLink to="/" class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-            <span class="text-white font-bold text-xs">TBW</span>
-          </div>
-          <h1 class="font-bold text-xl text-gray-900 hidden sm:block">thebarwardrobe</h1>
+          <img 
+            src="/logo_golden_wbg.avif" 
+            alt="Logo" 
+            class="h-8 w-auto object-contain"
+          />
         </NuxtLink>
         <div ref="searchContainer" class="hidden md:flex flex-1 max-w-xl relative">
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search thebarwardrobe"
+            placeholder="Search"
             class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-blue-500"
             @input="handleSearch"
             @keyup.enter="handleSearchEnter"
@@ -71,7 +72,7 @@
         >
           <div
             class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium"
-            :style="`background-color: ${displayUser.avatarColor || '#FF4500'}`"
+            :style="`background-color: ${displayUser.avatarColor || '#E9D386'}`"
           >
             <img
               v-if="displayUser.profileImage || displayUser.avatar"
@@ -121,7 +122,7 @@ const defaultUser = {
   firstName: 'User',
   lastName: '',
   username: 'user',
-  avatarColor: '#FF4500',
+  avatarColor: '#E9D386',
 }
 
 const shopifyUser = computed(() => {

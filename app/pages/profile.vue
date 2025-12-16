@@ -2,11 +2,11 @@
   <div class="max-w-4xl mx-auto px-4 py-8">
     <!-- Profile Header Card -->
     <div class="bg-white border border-gray-300 rounded-md mb-4 overflow-hidden">
-      <div class="h-20 bg-gradient-to-r from-orange-500 to-red-500"></div>
+      <div class="h-20" style="background: linear-gradient(to right, #E9D386, #D4C070);"></div>
       <div class="px-4 pb-4 -mt-10">
         <div
           class="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center text-white text-2xl font-bold inline-block"
-          :style="`background-color: ${displayUser.avatarColor || '#FF4500'}`"
+            :style="`background-color: ${displayUser.avatarColor || '#E9D386'}`"
         >
           <img
             v-if="displayUser.profileImage || displayUser.avatar"
@@ -103,7 +103,7 @@ const defaultUser = {
   email: 'john.doe@example.com',
   username: 'johndoe',
   profileImage: null,
-  avatarColor: '#FF4500',
+  avatarColor: '#E9D386',
   communityId: 'the_bar_wardrobe',
 }
 

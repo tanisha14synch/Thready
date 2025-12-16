@@ -20,7 +20,7 @@
         <NuxtLink to="/profile" class="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-md -mx-2">
           <div
             class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium"
-            :style="`background-color: ${displayUser.avatarColor || '#FF4500'}`"
+            :style="`background-color: ${displayUser.avatarColor || '#E9D386'}`"
           >
             <img
               v-if="displayUser.profileImage"
@@ -49,8 +49,9 @@
           @click="handleClick(item)"
           :class="[
             'flex items-center gap-3 w-full text-left px-4 py-2.5 hover:bg-gray-100 transition-colors',
-            mainStore.selectedSection === item.name ? 'bg-gray-50 border-l-4 border-orange-500' : ''
+            mainStore.selectedSection === item.name ? 'bg-gray-50 border-l-4' : ''
           ]"
+          :style="mainStore.selectedSection === item.name ? 'border-left-color: #E9D386' : ''"
         >
           <component :is="item.icon" class="w-5 h-5 text-gray-600" />
           <span class="font-medium text-gray-900">{{ item.label }}</span>
@@ -153,7 +154,7 @@ const defaultUser = {
   firstName: 'User',
   lastName: '',
   username: 'user',
-  avatarColor: '#FF4500',
+  avatarColor: '#E9D386',
 }
 
 const displayUser = computed(() => {
