@@ -1,6 +1,6 @@
 <template>
   <header class="w-full bg-white border-b border-gray-200 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-12">
+    <div class="max-w-full mx-auto px-4 flex items-center justify-between h-12">
       <!-- Left: Logo & Search -->
       <div class="flex items-center gap-4 flex-1">
         <button class="md:hidden" @click="toggleSidebar">
@@ -12,7 +12,7 @@
           </div>
           <h1 class="font-bold text-xl text-gray-900 hidden sm:block">thebarwardrobe</h1>
         </NuxtLink>
-        <div class="hidden md:flex flex-1 max-w-xl relative">
+        <div ref="searchContainer" class="hidden md:flex flex-1 max-w-xl relative">
           <input
             v-model="searchQuery"
             type="text"
@@ -20,7 +20,7 @@
             class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-blue-500"
             @input="handleSearch"
             @keyup.enter="handleSearchEnter"
-            @focus="showSearchResults = true"
+            @focus="handleSearchFocus"
           />
           <!-- Search Results Dropdown -->
           <div
@@ -93,7 +93,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Menu } from 'lucide-vue-next'
 import { useMainStore } from '~/stores/main'
 import { useCommunityStore } from '~/stores/communities'
@@ -102,8 +102,20 @@ import { getShopifyUser } from '~/utils/shopify'
 const mainStore = useMainStore()
 const communityStore = useCommunityStore()
 
+// Ensure communities are loaded when header mounts
+onMounted(async () => {
+  if (communityStore.communities.length === 0 && !communityStore.loading) {
+    try {
+      await communityStore.fetchCommunities()
+    } catch (error) {
+      console.warn('Failed to fetch communities in Header:', error)
+    }
+  }
+})
+
 const searchQuery = ref('')
 const showSearchResults = ref(false)
+const searchContainer = ref(null)
 
 const defaultUser = {
   firstName: 'User',
@@ -125,18 +137,36 @@ const displayUser = computed(() => {
 
 // Filter communities based on search query
 const filteredCommunities = computed(() => {
-  if (!searchQuery.value.trim()) return []
+  if (!searchQuery.value || !searchQuery.value.trim()) return []
   
   const query = searchQuery.value.toLowerCase().trim()
-  const allCommunities = communityStore.getAllCommunities.value
+  if (!query) return []
   
-  return allCommunities.filter(community => {
+  // Access communities directly from the store (Pinia unwraps refs automatically)
+  const allCommunities = communityStore.communities
+  
+  // Ensure it's an array - handle both ref and direct array access
+  let communitiesArray = []
+  if (Array.isArray(allCommunities)) {
+    communitiesArray = allCommunities
+  } else if (allCommunities && typeof allCommunities === 'object' && 'value' in allCommunities) {
+    communitiesArray = Array.isArray(allCommunities.value) ? allCommunities.value : []
+  }
+  
+  if (!Array.isArray(communitiesArray) || communitiesArray.length === 0) {
+    return []
+  }
+  
+  const filtered = communitiesArray.filter(community => {
+    if (!community) return false
     const name = (community.name || '').toLowerCase()
     const description = (community.description || '').toLowerCase()
     const id = (community.id || '').toLowerCase()
     
     return name.includes(query) || description.includes(query) || id.includes(query)
-  }).slice(0, 5) // Limit to 5 results
+  })
+  
+  return filtered.slice(0, 5) // Limit to 5 results
 })
 
 const handleSearch = () => {
@@ -144,6 +174,16 @@ const handleSearch = () => {
     showSearchResults.value = true
   } else {
     showSearchResults.value = false
+  }
+}
+
+const handleSearchFocus = () => {
+  // Ensure communities are loaded when user focuses on search
+  if (communityStore.communities.length === 0 && !communityStore.loading) {
+    communityStore.fetchCommunities()
+  }
+  if (searchQuery.value.trim()) {
+    showSearchResults.value = true
   }
 }
 
@@ -159,16 +199,26 @@ const closeSearch = () => {
   searchQuery.value = ''
 }
 
+// Watch for communities to load and update search results
+watch(() => communityStore.communities, () => {
+  // When communities load, update search if there's a query
+  if (searchQuery.value.trim() && showSearchResults.value) {
+    // Force reactivity update
+    searchQuery.value = searchQuery.value
+  }
+}, { deep: true })
+
 // Close search when clicking outside
 if (import.meta.client) {
   watch(showSearchResults, (isOpen) => {
     if (isOpen) {
       const handleClickOutside = (e) => {
-        if (!e.target.closest('.relative')) {
+        if (searchContainer.value && !searchContainer.value.contains(e.target)) {
           closeSearch()
           document.removeEventListener('click', handleClickOutside)
         }
       }
+      // Use nextTick to ensure DOM is updated
       setTimeout(() => {
         document.addEventListener('click', handleClickOutside)
       }, 100)
