@@ -6,71 +6,22 @@
         <div class="bg-white  rounded-md p-4 mb-4 shadow-sm">
           <h1 class="text-2xl font-bold mb-4">Create post</h1>
           
-          <!-- Community Selector -->
-          <div class="flex items-center">
-            <div v-if="selectedCommunity" class="flex items-center gap-2 p-2 bg-gray-100  rounded-full">
-              <div class="w-8 h-8 rounded-full overflow-hidden">
-                <img 
-                  :src="selectedCommunity.icon || '/images/communities/default-header.jpg'" 
-                  :alt="selectedCommunity.name" 
-                  class="w-full h-full object-cover"
-                />
-              </div>
-              <span class="font-medium">r/{{ selectedCommunity.name }}</span>
-              <button class="ml-2" @click="showCommunitySelector = true">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-              </button>
+          <!-- Selected Community Header (Fixed) -->
+          <div v-if="selectedCommunity" class="flex items-center gap-2 p-2 bg-gray-100 rounded-full mb-2">
+            <div class="w-8 h-8 rounded-full overflow-hidden">
+              <img 
+                :src="selectedCommunity.icon || '/images/communities/default-header.jpg'" 
+                :alt="selectedCommunity.name" 
+                class="w-full h-full object-cover"
+              />
             </div>
-            <button v-else class="flex items-center gap-2 p-2 bg-gray-100  rounded-md" @click="showCommunitySelector = true">
-              <span>Select a community</span>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>
-            </button>
-            
-            <!-- Community Selector Dropdown -->
-            <div v-if="showCommunitySelector" class="absolute mt-2 bg-white rounded-md shadow-lg z-10 p-2 max-h-60 overflow-y-auto" style="top: 120px; width: 300px;">
-              <div class="p-2">
-                <input 
-                  type="text" 
-                  placeholder="Search communities" 
-                  class="w-full p-2 rounded-md border border-gray-300"
-                  v-model="communitySearch"
-                />
-              </div>
-              <div class="py-2">
-                <div 
-                  v-for="community in filteredCommunities" 
-                  :key="community.id" 
-                  class="flex items-center gap-2 p-2 hover:bg-gray-100  rounded-md cursor-pointer"
-                  @click="selectCommunity(community)"
-                >
-                  <div class="w-8 h-8 rounded-full overflow-hidden">
-                    <img 
-                      :src="community.icon || '/images/communities/default-header.jpg'" 
-                      :alt="community.name" 
-                      class="w-full h-full object-cover"
-                    />
-                  </div>
-                  <span>r/{{ community.name }}</span>
-                </div>
-              </div>
-            </div>
+            <span class="font-medium">r/{{ selectedCommunity.name }}</span>
           </div>
-          
-          <!-- Post Type Tabs -->
-          <div class="flex border-b  mb-4">
-            <button 
-              v-for="tab in postTabs" 
-              :key="tab.id" 
-              class="px-4 py-2 font-medium" 
-              :class="activeTab === tab.id ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-500'"
-              @click="activeTab = tab.id"
-            >
-              {{ tab.name }}
-            </button>
+          <div v-else class="p-4 bg-red-100 text-red-700 rounded-md mb-4">
+             Please select a community from the home page or a community page to create a post.
+          </div>
+          <div v-if="selectedCommunity && !isJoined" class="p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md mb-4">
+            Join this community to create a post.
           </div>
           
           <!-- Post Content -->
@@ -78,44 +29,63 @@
             <input 
               type="text" 
               placeholder="Title" 
-              class="w-full p-3 mb-4 border  rounded-md"
+              class="w-full p-3 mb-4 border rounded-md"
               v-model="postTitle"
             />
             
-            <div class="border  rounded-md">
-              <div class="flex border-b p-2">
-                <button class="p-1 mx-1">B</button>
-                <button class="p-1 mx-1"><i>I</i></button>
-                <button class="p-1 mx-1">Link</button>
-                <button class="p-1 mx-1">•</button>
-              </div>
+            <div class="border rounded-md">
               <textarea 
                 placeholder="Text (optional)" 
-                class="w-full p-3 min-h-[200px] rounded-b-md"
+                class="w-full p-3 min-h-[200px] rounded-md focus:outline-none"
                 v-model="postContent"
               ></textarea>
             </div>
-            
-            <div class=" rounded-md pt-4 text-center">
-              <div class="border-2 border-dashed p-8 rounded-md">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p class="mb-2">Drag and drop images or</p>
-                <button class="bg-yellow-500 text-white px-4 py-2 rounded-full">Upload</button>
+
+            <!-- Image Upload (optional) -->
+            <div class="rounded-md pt-4">
+              <div 
+                class="border-2 border-dashed p-6 rounded-md hover:bg-gray-50 transition-colors cursor-pointer text-center"
+                @click="triggerFileInput"
+                @dragover.prevent
+                @drop.prevent="handleDrop"
+              >
+                <input 
+                  type="file" 
+                  ref="fileInput" 
+                  class="hidden" 
+                  accept="image/*"
+                  @change="handleFileChange"
+                />
+                <p class="mb-2 font-medium">Add an image (optional)</p>
+                <p class="text-sm text-gray-500">Click or drag & drop</p>
               </div>
-            </div>    
+
+              <div v-if="postImage" class="mt-3 relative border rounded-md p-2">
+                <img :src="postImage" class="max-h-[260px] mx-auto object-contain rounded" />
+                <button 
+                  @click="removeImage"
+                  class="absolute top-2 right-2 bg-gray-800 bg-opacity-70 text-white rounded-full p-1 hover:bg-opacity-100"
+                  aria-label="Remove image"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
           
           <!-- Post Actions -->
           <div class="flex justify-end gap-2">
             <button class="px-4 py-2 border  rounded-full">Save Draft</button>
             <button 
-              class="px-4 py-2 bg-yellow-400 text-white rounded-full"
-              :disabled="!canSubmitPost"
+              class="px-4 py-2 bg-yellow-400 text-white rounded-full flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="!canSubmitPost || isSubmitting"
               @click="submitPost"
             >
-              Post
+              <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <span v-if="isSubmitting">Posting...</span>
+              <span v-else>Post</span>
             </button>
           </div>
         </div>
@@ -171,55 +141,92 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCommunityStore } from '~/stores/communities'
 import { useMainStore } from '~/stores/main'
+import { usePostStore } from '~/stores/posts'
 
 const route = useRoute()
 const router = useRouter()
 const communityStore = useCommunityStore()
 const mainStore = useMainStore()
+const postStore = usePostStore()
 
 // Post form data
 const postTitle = ref('')
 const postContent = ref('')
-const postLink = ref('')
-const pollOptions = ref(['', ''])
+const postImage = ref(null)
 
 // UI state
-const activeTab = ref('text')
-const showCommunitySelector = ref(false)
-const communitySearch = ref('')
 const selectedCommunity = ref(null)
+const isSubmitting = ref(false)
+const fileInput = ref(null)
 
-
-// Get all communities
-const communities = computed(() => {
-  return communityStore.getAllCommunities()
+const isJoined = computed(() => {
+  if (!selectedCommunity.value) return false
+  return mainStore.isJoined(selectedCommunity.value.id)
 })
 
-// Filter communities based on search
-const filteredCommunities = computed(() => {
-  if (!communitySearch.value) return communities.value
-  
-  return communities.value.filter(community => 
-    community.name.toLowerCase().includes(communitySearch.value.toLowerCase())
-  )
-})
-
-// Check if post can be submitted
 const canSubmitPost = computed(() => {
-  return selectedCommunity.value && postTitle.value.trim().length > 0
+  return selectedCommunity.value && postTitle.value.trim().length > 0 && isJoined.value
 })
 
-// Select a community
-const selectCommunity = (community) => {
-  selectedCommunity.value = community
-  showCommunitySelector.value = false
+// File Upload Handlers
+const triggerFileInput = () => {
+  fileInput.value?.click()
+}
+
+const handleFileChange = (event) => {
+  const file = event.target.files?.[0]
+  if (file && file.type.startsWith('image/')) {
+    processFile(file)
+  }
+}
+
+const handleDrop = (event) => {
+  const file = event.dataTransfer?.files?.[0]
+  if (file && file.type.startsWith('image/')) {
+    processFile(file)
+  }
+}
+
+const processFile = (file) => {
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    postImage.value = e.target?.result
+  }
+  reader.readAsDataURL(file)
+}
+
+const removeImage = () => {
+  postImage.value = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
 }
 
 // Submit post
-const submitPost = () => {
-  // Here you would typically call an API to create the post
-  // For now, we'll just navigate back to the community page
-  router.push(`/community/${selectedCommunity.value.id}`)
+const submitPost = async () => {
+  if (!canSubmitPost.value || isSubmitting.value) return
+
+  isSubmitting.value = true
+
+  try {
+    await postStore.createPost({
+      communityId: selectedCommunity.value.id,
+      title: postTitle.value,
+      content: postContent.value,
+      image: postImage.value,
+      user: 'CurrentUser', // Placeholder
+      avatar: '/images/avatars/default-avatar.jpg',
+      shareable: true
+    })
+    
+    // Navigate back to the community page
+    await router.push(`/community/${selectedCommunity.value.id}`)
+  } catch (error) {
+    console.error('Failed to create post:', error)
+    // Ideally show a notification here
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 // Format numbers (e.g., 1000 -> 1k)
@@ -235,6 +242,7 @@ const formatNumber = (num) => {
 
 // Format date
 const formatDate = (dateString) => {
+  if (!dateString) return 'Unknown'
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', { 
     month: 'short', 
@@ -244,12 +252,20 @@ const formatDate = (dateString) => {
 }
 
 // Check if we have a community ID from the route
-onMounted(() => {
-  const communityId = route.query.community
+onMounted(async () => {
+  const communityId = route.query.c || route.query.community
   if (communityId) {
+    // Ensure communities are loaded
+    if (communityStore.communities.length === 0) {
+        await communityStore.fetchCommunities()
+    }
     const community = communityStore.getCommunityById(communityId)
     if (community && community.value) {
       selectedCommunity.value = community.value
+      // auto-join to allow posting when coming from community page
+      if (!mainStore.isJoined(communityId)) {
+        mainStore.joinCommunity(communityId)
+      }
     }
   }
 })

@@ -1,8 +1,21 @@
 <template>
-  <aside
-    class="w-64 bg-white min-h-screen hidden md:block px-2 py-4 border-r border-gray-200"
-  >
-    <!-- Main Navigation -->
+  <div>
+    <!-- Mobile Backdrop -->
+    <div 
+      v-if="mainStore.isSidebarOpen" 
+      class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+      @click="mainStore.closeSidebar"
+    ></div>
+
+    <aside
+      :class="[
+        'w-64 bg-white min-h-screen px-2 py-4 border-r border-gray-200',
+        'fixed top-0 left-0 z-50 transition-transform duration-300',
+        'md:relative md:translate-x-0 md:z-auto',
+        mainStore.isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      ]"
+    >
+      <!-- Main Navigation -->
     <nav class="py-2 ">
       <button
         v-for="item in sidebarItems"
@@ -64,6 +77,7 @@
       </div>
     </div>
   </aside>
+  </div>
 </template>
 
 <script setup>
@@ -130,11 +144,13 @@ onMounted(() => {
 
 const handleClick = (item) => {
   mainStore.setSection(item.name)
+  mainStore.closeSidebar()
   navigateTo('/')
 }
 
 const goToCommunity = (communityId) => {
   mainStore.setCommunity(communityId)
+  mainStore.closeSidebar()
   navigateTo(`/community/${communityId}`)
 }
 </script>

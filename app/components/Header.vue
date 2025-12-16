@@ -17,8 +17,11 @@
 
 <script setup>
 import { Menu, Bell, User } from 'lucide-vue-next'
+import { useMainStore } from '~/stores/main'
+
+const mainStore = useMainStore()
 
 const toggleSidebar = () => {
-  console.log('toggle sidebar') // you can enhance this for mobile later
+  mainStore.toggleSidebar()
 }
 </script>

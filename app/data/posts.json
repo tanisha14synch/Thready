@@ -1,0 +1,54 @@
+[
+  {
+    "id": "p-gaming-1",
+    "communityId": "gaming",
+    "title": "Welcome to the Gaming community",
+    "content": "Share your latest builds, wins, or game recommendations.",
+    "user": "Moderator",
+    "userId": "legacy",
+    "avatar": "/images/avatars/default-avatar.jpg",
+    "upvotes": 12,
+    "downvotes": 1,
+    "postedAt": "2024-12-01T10:00:00Z",
+    "commentsList": [
+      {
+        "id": "c-gaming-1",
+        "user": "PlayerOne",
+        "userId": "legacy",
+        "avatar": "/images/avatars/default-avatar.jpg",
+        "text": "Glad to be here!",
+        "commentedAt": "2024-12-01T12:00:00Z",
+        "displayedScore": 1,
+        "userVote": 0
+      }
+    ]
+  },
+  {
+    "id": "p-movies-1",
+    "communityId": "movies",
+    "title": "Best movies of the year?",
+    "content": "Drop your must-watch picks.",
+    "user": "FilmBuff",
+    "userId": "legacy",
+    "avatar": "/images/avatars/default-avatar.jpg",
+    "upvotes": 5,
+    "downvotes": 0,
+    "postedAt": "2024-11-20T08:30:00Z",
+    "commentsList": []
+  },
+  {
+    "id": "p-bar-1",
+    "communityId": "the_bar_wardrobe",
+    "title": "Outfit inspo thread",
+    "content": "Share your fits and styling tips.",
+    "user": "Stylist",
+    "userId": "legacy",
+    "avatar": "/images/avatars/default-avatar.jpg",
+    "upvotes": 9,
+    "downvotes": 2,
+    "postedAt": "2024-10-15T14:15:00Z",
+    "commentsList": []
+  }
+]
+
+

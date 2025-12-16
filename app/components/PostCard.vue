@@ -1,18 +1,33 @@
 <template>
   <section :class="[cardWidth, 'my-6 p-4 border rounded-xl border-gray-200 bg-gray-300']">
-    <!-- 🧍 User Info -->
+    <!-- 🧍 User Info & Actions -->
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center gap-3">
-        <NuxtImg :src="post.avatar" class="w-8 h-8 rounded-full" />
+        <NuxtImg :src="post.avatar || '/images/avatars/default-avatar.jpg'" class="w-8 h-8 rounded-full" />
         <div class="flex flex-col">
           <p class="font-semibold text-xs">{{ post.user }}</p>
           <p class="text-xs text-gray-500">Posted {{ post.postedAt }}</p>
         </div>
       </div>
+      
+      <!-- Post Actions -->
+      <div class="flex gap-2">
+        <button 
+          v-if="canDeletePost" 
+          @click="initiateDeletePost" 
+          class="text-gray-500 hover:text-red-600"
+          title="Delete Post"
+        >
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
     </div>
 
-    <!-- 📝 Post Title -->
-    <p class="text-base font-medium">{{ post.title }}</p>
+    <!-- 📝 Post Title & Content -->
+    <div>
+      <p class="text-base font-medium">{{ post.title }}</p>
+      <p v-if="post.content" class="text-sm mt-1 text-gray-800">{{ post.content }}</p>
+    </div>
 
     <!-- 🖼️ Post Media -->
     <div class="mt-2">
@@ -71,26 +86,22 @@
       </div>
     </div>
 
-    <!-- 💬 Comment Section -->
-    <div v-show="showComment" class="mt-3 border rounded-lg border-gray-300 p-2">
+    <!-- 🗨️ Comments Section -->
+    <div v-if="showComment" class="mt-4 bg-gray-50 p-4 rounded-lg">
       <textarea
         ref="textarea"
-        class="w-full p-2 border border-gray-300 rounded-lg resize-none bg-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-400"
-        rows="3"
-        placeholder="Add a comment..."
+        v-model="newCommentText"
+        class="w-full p-2 border rounded mb-2 text-sm"
+        placeholder="Write a comment..."
+        rows="2"
       ></textarea>
-
-      <div class="flex justify-end mt-2 gap-2">
-        <button
-          class="px-3 py-1 border border-gray-200 rounded-full bg-gray-200 hover:bg-gray-300"
-          @click="showComment = false"
+      <div class="flex justify-end">
+        <button 
+          @click="handleAddComment" 
+          class="bg-blue-600 text-white px-4 py-1 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+          :disabled="!newCommentText.trim() || postStore.loading"
         >
-          Cancel
-        </button>
-        <button
-          class="px-3 py-1 border rounded-full bg-yellow-400 text-white hover:bg-yellow-500"
-        >
-          Comment
+          {{ postStore.loading ? 'Posting...' : 'Post' }}
         </button>
       </div>
 
@@ -99,55 +110,76 @@
         <div
           v-for="comment in comments"
           :key="comment.id"
-          class="pb-3"
+          class="pb-3 border-b border-gray-100 last:border-0"
         >
-          <div class="flex items-center gap-3 mb-2">
-            <NuxtImg :src="comment.avatar" class="w-8 h-8 rounded-full" />
-            <div>
-              <p class="font-semibold text-xs">{{ comment.user }}</p>
-              <p class="text-xs text-gray-500">Commented {{ comment.commentedAt }}</p>
-            </div>
-          </div>
-
-          <p class="text-sm font-medium text-gray-800">{{ comment.text }}</p>
-
-          <!-- 🗳️ Comment Actions -->
-          <div class="flex items-center gap-2 mt-3">
-            <div class="flex items-center border border-gray-400 rounded-full px-1">
-              <button
-                :class="['p-2 rounded-full text-xs', comment.userVote === 1 ? 'text-blue-600' : 'text-gray-700']"
-              >
-                <i class="fas fa-arrow-up"></i>
-              </button>
-              <div class="text-sm font-medium text-gray-700">
-                {{ comment.displayedScore }}
+          <div class="flex items-start justify-between">
+            <div class="flex items-start gap-3 w-full">
+              <NuxtImg :src="comment.avatar || '/images/avatars/default-avatar.jpg'" class="w-8 h-8 rounded-full" />
+              <div class="w-full">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-semibold text-xs">{{ comment.user }}</p>
+                        <p class="text-xs text-gray-500">Commented {{ formatDate(comment.commentedAt) }}</p>
+                    </div>
+                    
+                     <!-- Comment Actions (Vote & Delete) -->
+                    <div class="flex items-center gap-3">
+                        <!-- Vote -->
+                        <div class="flex items-center gap-1 bg-white border border-gray-200 rounded-full px-2 py-0.5">
+                            <button 
+                                @click="voteComment(comment.id, 1)" 
+                                :class="['text-xs hover:bg-gray-100 p-1 rounded', comment.userVote === 1 ? 'text-blue-600' : 'text-gray-500']"
+                            >
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <span class="text-xs font-medium min-w-[12px] text-center">{{ comment.displayedScore || 0 }}</span>
+                            <button 
+                                @click="voteComment(comment.id, -1)" 
+                                :class="['text-xs hover:bg-gray-100 p-1 rounded', comment.userVote === -1 ? 'text-red-600' : 'text-gray-500']"
+                            >
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Delete -->
+                        <button 
+                            v-if="canDeleteComment(comment)" 
+                            @click="initiateDeleteComment(comment.id)" 
+                            class="text-gray-400 hover:text-red-600 text-xs"
+                            title="Delete Comment"
+                        >
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-sm mt-1 text-gray-700">{{ comment.text }}</p>
               </div>
-              <button
-                :class="['p-2 rounded-full text-xs', comment.userVote === -1 ? 'text-red-600' : 'text-gray-700']"
-              >
-                <i class="fas fa-arrow-down"></i>
-              </button>
             </div>
-
-            <button
-              v-if="comment.shareable"
-              class="ml-2 p-2 border rounded-full text-xs border-gray-400"
-            >
-              <i class="fas fa-share"></i>
-            </button>
           </div>
         </div>
       </div>
-
-      <div v-else class="text-xs text-gray-500 mt-3 text-center">
+      <div v-else class="mt-4 text-center text-gray-500 text-sm">
         No comments yet. Be the first to comment!
       </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <ConfirmationModal
+        :isOpen="showDeleteModal"
+        :title="deleteModalTitle"
+        :message="deleteModalMessage"
+        @confirm="confirmDelete"
+        @cancel="cancelDelete"
+    />
+
   </section>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, toRef, nextTick } from 'vue'
+import { ref, computed, toRef, nextTick } from 'vue'
+import { usePostStore } from '~/stores/posts'
+import { getShopifyUser } from '~/utils/shopify'
+import ConfirmationModal from '~/components/ConfirmationModal.vue'
 
 /* 🧩 Props */
 const props = defineProps({
@@ -155,16 +187,88 @@ const props = defineProps({
   cardWidth: { type: String, default: 'w-full h-auto' },
 })
 
+const postStore = usePostStore()
+const currentUser = getShopifyUser()
+
 /* 🧠 Reactive State */
 const post = toRef(props, 'post')
 const cardWidth = toRef(props, 'cardWidth')
 const showComment = ref(false)
 const textarea = ref(null)
-const userVote = ref(0)
 const shareMessage = ref('')
+const newCommentText = ref('')
+
+// Delete Modal State
+const showDeleteModal = ref(false)
+const itemToDelete = ref(null) // ID
+const deleteType = ref(null) // 'post' or 'comment'
+
+const deleteModalTitle = computed(() => deleteType.value === 'post' ? 'Delete Post' : 'Delete Comment')
+const deleteModalMessage = computed(() => `Do you want to delete this ${deleteType.value}?`)
 
 /* 💬 Computed: comments */
-const comments = computed(() => post.value?.comments ?? [])
+const comments = computed(() => post.value?.commentsList ?? [])
+
+/* 🔐 Auth Checks */
+const canDeletePost = computed(() => {
+    if (!currentUser) return false
+    // Check ID match (preferred) or username match (legacy)
+    return post.value.userId === currentUser.id || post.value.user === currentUser.username
+})
+
+function canDeleteComment(comment) {
+    if (!currentUser) return false
+    return comment.userId === currentUser.id || comment.user === currentUser.username
+}
+
+/* 🗑️ Delete Logic */
+function initiateDeletePost() {
+    itemToDelete.value = post.value.id
+    deleteType.value = 'post'
+    showDeleteModal.value = true
+}
+
+function initiateDeleteComment(commentId) {
+    itemToDelete.value = commentId
+    deleteType.value = 'comment'
+    showDeleteModal.value = true
+}
+
+function cancelDelete() {
+    showDeleteModal.value = false
+    itemToDelete.value = null
+    deleteType.value = null
+}
+
+async function confirmDelete() {
+    if (deleteType.value === 'post') {
+        await postStore.deletePost(itemToDelete.value)
+    } else if (deleteType.value === 'comment') {
+        await postStore.deleteComment(post.value.id, itemToDelete.value)
+    }
+    cancelDelete()
+}
+
+
+/* 🗳️ Voting System */
+const userVote = computed(() => post.value.userVote || 0)
+
+const displayedScore = computed(() => {
+    // Score = (upvotes - downvotes)
+    return (post.value.upvotes || 0) - (post.value.downvotes || 0)
+})
+
+function handleUpvote() {
+  postStore.votePost(post.value.id, 1)
+}
+
+function handleDownvote() {
+  postStore.votePost(post.value.id, -1)
+}
+
+function voteComment(commentId, value) {
+    postStore.voteComment(post.value.id, commentId, value)
+}
 
 /* 🪄 Comment toggle */
 function toggleComment() {
@@ -172,64 +276,26 @@ function toggleComment() {
   if (showComment.value) nextTick(() => textarea.value?.focus())
 }
 
-/* 🗳️ Voting System */
-const VOTES_KEY = 'post_votes'
-
-function loadVote() {
-  if (typeof window === 'undefined') return
-  const map = JSON.parse(localStorage.getItem(VOTES_KEY) || '{}')
-  if (map[post.value.id] !== undefined) userVote.value = map[post.value.id]
+async function handleAddComment() {
+  if (!newCommentText.value.trim()) return
+  await postStore.addComment(post.value.id, newCommentText.value)
+  newCommentText.value = ''
 }
 
-function saveVote() {
-  if (typeof window === 'undefined') return
-  const map = JSON.parse(localStorage.getItem(VOTES_KEY) || '{}')
-  map[post.value.id] = userVote.value
-  localStorage.setItem(VOTES_KEY, JSON.stringify(map))
+function handleShare() {
+    shareMessage.value = 'Link copied!'
+    setTimeout(() => { shareMessage.value = '' }, 2000)
 }
 
-onMounted(loadVote)
-
-const displayedScore = computed(() => {
-  const base = Number(post.value.upvotes || 0)
-  return base + (userVote.value === 1 ? 1 : userVote.value === -1 ? -1 : 0)
-})
-
-function handleUpvote() {
-  userVote.value = userVote.value === 1 ? 0 : 1
-  saveVote()
-}
-
-function handleDownvote() {
-  userVote.value = userVote.value === -1 ? 0 : -1
-  saveVote()
-}
-
-/* 📤 Share Function */
-async function handleShare() {
-  try {
-    const shareUrl =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/community/${post.value.community}`
-        : ''
-    if (navigator.share) {
-      await navigator.share({ title: post.value.title || 'Post', url: shareUrl })
-      shareMessage.value = 'Shared'
-    } else if (navigator.clipboard) {
-      await navigator.clipboard.writeText(shareUrl)
-      shareMessage.value = 'Link copied'
-    } else {
-      const el = document.createElement('textarea')
-      el.value = shareUrl
-      document.body.appendChild(el)
-      el.select()
-      document.execCommand('copy')
-      document.body.removeChild(el)
-      shareMessage.value = 'Link copied'
+function formatDate(dateStr) {
+    if (!dateStr) return ''
+    try {
+        const date = new Date(dateStr)
+        // If invalid date, return original string if it looks like "2 hours ago"
+        if (isNaN(date.getTime())) return dateStr 
+        return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date)
+    } catch (e) {
+        return dateStr
     }
-  } catch (e) {
-    shareMessage.value = 'Failed to share'
-  }
-  setTimeout(() => (shareMessage.value = ''), 2000)
 }
 </script>
