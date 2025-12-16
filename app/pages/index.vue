@@ -1,11 +1,7 @@
 <template>
   <div class="px-4 pb-8">
     <!-- HOME Section -->
-    <div
-      v-if="store.selectedSection === 'home'"
-      class="mt-0 scrollbar-hide "
-      style="height: 100vh; overflow-y: auto;"
-    >
+    <div v-if="store.selectedSection === 'home'">
       <div v-if="loading" class="py-8 text-center text-gray-500">Loading posts...</div>
       <div v-else>
         <div v-if="allPosts.length === 0" class="py-8 text-center text-gray-500">No posts yet.</div>
@@ -16,11 +12,7 @@
     </div>
 
     <!-- POPULAR Section -->
-    <div
-      v-if="store.selectedSection === 'popular'"
-      class="mt-"
-      style="height: 100vh; overflow-y: auto;"
-    >
+    <div v-if="store.selectedSection === 'popular'">
       <div v-if="loading" class="py-8 text-center text-gray-500">Loading posts...</div>
       <div v-else>
         <div v-if="popularPosts.length === 0" class="py-8 text-center text-gray-500">No popular posts yet.</div>

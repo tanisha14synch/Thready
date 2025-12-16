@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Community {
+  id          String   @id // e.g. "the_bar_wardrobe"
+  name        String
+  description String?
+  headerImage String?
+  icon        String?
+  members     Int      @default(0)
+  online      Int      @default(0)
+  createdDate DateTime @default(now())
+  isPublic    Boolean  @default(true)
+  tags        String   // JSON string of tags array
+
+  moderators  Moderator[]
+  posts       Post[]
+}
+
+model Moderator {
+  id          String    @id @default(uuid())
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id])
+  username    String
+  avatar      String?
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id])
+  
+  userId      String    @default("legacy") // Unique User ID from Shopify
+  user        String    // Display Username
+  avatar      String?   // User avatar
+  
+  title       String
+  content     String?
+  image       String?
+  video       String?
+  
+  upvotes     Int       @default(0)
+  downvotes   Int       @default(0)
+  shareable   Boolean   @default(true)
+  
+  postedAt    DateTime  @default(now())
+  
+  comments    Comment[]
+  votes       PostVote[]
+}
+
+model PostVote {
+  id        String   @id @default(uuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      String
+  value     Int      // 1 for upvote, -1 for downvote
+  createdAt DateTime @default(now())
+
+  @@unique([postId, user])
+}
+
+model Comment {
+  id             String   @id @default(uuid())
+  postId         String
+  post           Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  userId         String   @default("legacy") // Unique User ID from Shopify
+  user           String   // Username
+  avatar         String?
+  
+  text           String
+  commentedAt    DateTime @default(now())
+  
+  displayedScore Int      @default(1)
+  userVote       Int      @default(0) // This might be a computed field in API, but kept for now
+  shareable      Boolean  @default(false)
+
+  votes          CommentVote[]
+}
+
+model CommentVote {
+  id        String   @id @default(uuid())
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      String
+  value     Int      // 1 for upvote, -1 for downvote
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, user])
+}

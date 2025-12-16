@@ -26,19 +26,21 @@
           
           <!-- Community Name and Details -->
           <div class="flex-1 pb-3">
-            <h1 class="text-xl font-bold">{{ community?.name || '' }}</h1>
+            <h1 class="text-xl sm:text-lg font-bold">{{ community?.name || '' }}</h1>
             <div class="flex flex-wrap gap-2 mt-2">
               <span v-for="tag in community?.tags || []" :key="tag" class="text-xs px-2 py-1 bg-gray-200 rounded">{{ tag }}</span>
             </div>
           </div>
-          </div>
-           <NuxtLink to="/create-post" class="">
-            <button 
-              class="w-full rounded-full px-3 py-2 border border-gray-300 text-xs mt-2 text-left"
-            >
-              <i class="fas fa-add"></i> Create Post
-            </button>
-          </NuxtLink>
+        </div>
+        <div class="flex gap-2 items-center">
+          <button
+            class="w-full rounded-full px-3 py-2 border border-gray-300 text-xs mt-2 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="!isJoined"
+            @click="handleCreatePost"
+          >
+            <i class="fas fa-add"></i> Create Post
+          </button>
+        </div>
       </div>
     </div>
     
@@ -54,7 +56,7 @@
 </div>
 
       <!-- Sidebar -->
-      <div class=" w-full lg:w-[30%] ml-0 lg:ml-6 flex-shrink-0 mt-0 sticky top-0 z-50 lg:mt-6">
+      <div class=" w-full lg:w-[30%] ml-0 lg:ml-6 flex-shrink-0 mt-0 sticky top-0 z-10 lg:mt-6">
         <!-- About Community -->
         <div class="rounded-md overflow-hidden mb-4" style="border: 1px solid var(--border-color); background-color: var(--card-color);">
           <div class="px-3 py-2 text-white font-medium" style="background-color: var(--primary-color);">
@@ -79,8 +81,13 @@
               </div>
             </div>
             
-            <button class="w-full  py-1 rounded-full border border-gray-300 text-sm font-medium" style="background-color: var(--primary-color);">
-              <i class="fas fa-add"></i> Join Community
+            <button
+              class="w-full py-1 rounded-full border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              style="background-color: var(--primary-color);"
+              @click="toggleJoin"
+            >
+              <i class="fas" :class="isJoined ? 'fa-check' : 'fa-add'"></i>
+              {{ isJoined ? 'Joined' : 'Join Community' }}
             </button>
           </div>
         </div>
@@ -116,40 +123,26 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useMainStore } from '~/stores/main'
 import { useCommunityStore } from '~/stores/communities'
+import { usePostStore } from '~/stores/posts'
 import PostCard from '~/components/PostCard.vue'
 
 const route = useRoute()
+const router = useRouter()
 const mainStore = useMainStore()
 const communityStore = useCommunityStore()
+const postStore = usePostStore()
 
 const communityId = computed(() => route.params.id)
 const community = ref(null)
-const loading = computed(() => communityStore.loading)
-const error = computed(() => communityStore.error)
+const loading = computed(() => communityStore.loading || postStore.loading)
+const error = computed(() => communityStore.error || postStore.error)
+const isJoined = computed(() => mainStore.isJoined(communityId.value))
 
-// derive posts directly from the community JSON
-const posts = computed(() => {
-  if (!community.value || !Array.isArray(community.value.posts)) return []
-  return community.value.posts.map((p, idx) => ({
-    id: `${community.value.id}-${p.id || idx}`,
-    community: community.value.id,
-    user: p.user || 'Unknown',
-    avatar: p.avatar || '',
-    postedAt: p.postedAt || '',
-    title: p.title || '',
-    content: p.content || '',
-    upvotes: p.upvotes || 0,
-    downvotes: p.downvotes || 0,
-    comments: p.comments || 0,
-    commentsList: p.commentsList || [],
-    image: p.image || null,
-    video: p.video || null,
-    shareable: p.shareable || false,
-  }))
-})
+// derive posts for this community only (even if global filter changes elsewhere)
+const posts = computed(() => postStore.getPostsByCommunity(communityId.value)?.value ?? [])
 
 // Format numbers for display (e.g., 1.2k)
 const formatNumber = (num) => {
@@ -181,6 +174,9 @@ const loadCommunity = async () => {
     const communityData = communityStore.getCommunityById(communityId.value)
     community.value = communityData.value
     mainStore.setCommunity(communityId.value)
+    
+    // Fetch posts for this community from the store
+    await postStore.fetchPostsByCommunity(communityId.value)
   }
 }
 
@@ -193,4 +189,19 @@ onMounted(async () => {
 watch(communityId, async () => {
   await loadCommunity()
 })
+
+const toggleJoin = () => {
+  if (!communityId.value) return
+  if (isJoined.value) {
+    mainStore.leaveCommunity(communityId.value)
+  } else {
+    mainStore.joinCommunity(communityId.value)
+  }
+}
+
+const handleCreatePost = () => {
+  if (!communityId.value) return
+  if (!isJoined.value) return
+  router.push(`/create-post?c=${communityId.value}`)
+}
 </script>

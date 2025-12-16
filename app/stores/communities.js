@@ -7,22 +7,22 @@ export const useCommunityStore = defineStore('communityStore', () => {
   const loading = ref(false)
   const error = ref(null)
   
+  const API_URL = 'http://localhost:3000'
+
   // Fetch communities from backend
   const fetchCommunities = async () => {
     loading.value = true
     error.value = null
     try {
-      // Replace with actual API call when backend is ready
-      // const response = await fetch('/api/communities')
-      // communities.value = await response.json()
-      
-      // Using mock data for now
-      setTimeout(() => {
-        communities.value = communityData
-        loading.value = false
-      }, 500)
+      const response = await fetch(`${API_URL}/communities`)
+      if (!response.ok) throw new Error('Failed to fetch communities')
+      const data = await response.json()
+      communities.value = data
     } catch (err) {
-      error.value = err.message || 'Failed to fetch communities'
+      // Fallback to bundled JSON so the app keeps working offline/when server is down
+      communities.value = communityData
+      error.value = err.message || 'Using local communities (server unreachable)'
+    } finally {
       loading.value = false
     }
   }
@@ -32,18 +32,30 @@ export const useCommunityStore = defineStore('communityStore', () => {
     loading.value = true
     error.value = null
     try {
-      // Replace with actual API call when backend is ready
-      // const response = await fetch(`/api/communities/${communityId}`)
-      // const data = await response.json()
-      // Update the community in the store if it exists
+      const response = await fetch(`${API_URL}/communities/${communityId}`)
+      if (!response.ok) throw new Error('Failed to fetch community')
+      const data = await response.json()
       
-      // Using mock data for now
-      setTimeout(() => {
-        // No need to modify the store for mock data
-        loading.value = false
-      }, 500)
+      // Update or add the community in the store
+      const index = communities.value.findIndex(c => c.id === communityId)
+      if (index !== -1) {
+        communities.value[index] = data
+      } else {
+        communities.value.push(data)
+      }
     } catch (err) {
-      error.value = err.message || `Failed to fetch community ${communityId}`
+      // Fallback to bundled JSON entry
+      const local = communityData.find(c => c.id === communityId)
+      if (local) {
+        const index = communities.value.findIndex(c => c.id === communityId)
+        if (index !== -1) {
+          communities.value[index] = local
+        } else {
+          communities.value.push(local)
+        }
+      }
+      error.value = err.message || `Using local community ${communityId} (server unreachable)`
+    } finally {
       loading.value = false
     }
   }
