@@ -22,7 +22,7 @@
 
           <!-- Community Name and Details -->
           <div class="flex-1  pb-3">
-            <h1 class="text-base md:text-lg lg:text-xl font-bold">
+            <h1 class="text-xl font-bold">
               {{ community?.name || '' }}
             </h1>
             <div class="flex flex-wrap gap-2 mt-2">
