@@ -4,61 +4,55 @@
     <div class="relative">
       <!-- Banner Image -->
       <div class="h-[30vh] w-full overflow-hidden rounded-2xl bg-gray-800">
-        <NuxtImg
-          v-if="community?.headerImage"
-          :src="community.headerImage"
-          alt="Community header"
-          class="w-full h-full object-cover"
-          onerror="this.style.display='none'"
-        />
+        <NuxtImg v-if="community?.headerImage" :src="community.headerImage" alt="Community header"
+          class="w-full h-full object-cover" onerror="this.style.display='none'" />
       </div>
-      
+
       <!-- Community Info -->
-      <div class="max-w-full mx-auto px-4 flex items-start justify-between ">
+      <div class="max-w-full mx-auto px-4 flex flex-wrap items-start justify-between ">
         <div class="flex items-end ">
           <!-- Community Icon -->
           <div class="w-25 h-25 -mt-5 md:w-20  md:h-20 rounded-full bg-white p-1 mr-4 overflow-hidden">
-            <NuxtImg v-if="community?.icon" :src="community.icon" alt="icon" class="w-full h-full rounded-full object-cover" />
+            <NuxtImg v-if="community?.icon" :src="community.icon" alt="icon"
+              class="w-full h-full rounded-full object-cover" />
             <div v-else class="w-full h-full rounded-full bg-gray-800 flex items-center justify-center text-white">
               <span class="text-2xl">r</span>
             </div>
           </div>
-          
+
           <!-- Community Name and Details -->
-          <div class="flex-1 pb-3">
-            <h1 class="text-xl sm:text-lg font-bold">{{ community?.name || '' }}</h1>
+          <div class="flex-1  pb-3">
+            <h1 class="text-base md:text-lg lg:text-xl font-bold">
+              {{ community?.name || '' }}
+            </h1>
             <div class="flex flex-wrap gap-2 mt-2">
-              <span v-for="tag in community?.tags || []" :key="tag" class="text-xs px-2 py-1 bg-gray-200 rounded">{{ tag }}</span>
+              <span v-for="tag in community?.tags || []" :key="tag" class="text-xs px-2 py-1 bg-gray-200 rounded">{{ tag
+                }}</span>
             </div>
           </div>
         </div>
         <div class="flex gap-2 items-center">
           <button
             class="w-full rounded-full px-3 py-2 border border-gray-300 text-xs mt-2 text-left disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="!isJoined"
-            @click="handleCreatePost"
-          >
+            :disabled="!isJoined" @click="handleCreatePost">
             <i class="fas fa-add"></i> Create Post
           </button>
         </div>
       </div>
     </div>
-    
+
     <!-- Main Content -->
-    <div class="max-w-full mx-auto px-4  flex flex-col md:flex-row">
+    <div class="max-w-full mx-auto px-4  flex flex-wrap flex-col md:flex-row">
       <!-- Posts Column -->
-<div class="flex-1 space-y-4">
-  <PostCard
-    v-for="post in posts"
-    :key="post.id"
-    :post="post"
-  />
-</div>
+      <div class="flex-1 space-y-4 lg:min-w-[80%]">
+        <PostCard v-for="post in posts" :key="post.id" :post="post" />
+      </div>
 
       <!-- Sidebar -->
       <div class=" w-full lg:w-[30%] ml-0 lg:ml-6 flex-shrink-0 mt-0 sticky top-0 z-10 lg:mt-6">
         <!-- About Community -->
-        <div class="rounded-md overflow-hidden mb-4" style="border: 1px solid var(--border-color); background-color: var(--card-color);">
+        <div class="rounded-md overflow-hidden mb-4"
+          style="border: 1px solid var(--border-color); background-color: var(--card-color);">
           <div class="px-3 py-2 text-white font-medium" style="background-color: var(--primary-color);">
             {{ community?.name || 'Community' }}
           </div>
@@ -80,18 +74,16 @@
                 <p class="text-xs" style="color: var(--text-secondary);">Online</p>
               </div>
             </div>
-            
+
             <button
               class="w-full py-1 rounded-full border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              style="background-color: var(--primary-color);"
-              @click="toggleJoin"
-            >
+              style="background-color: var(--primary-color);" @click="toggleJoin">
               <i class="fas" :class="isJoined ? 'fa-check' : 'fa-add'"></i>
               {{ isJoined ? 'Joined' : 'Join Community' }}
             </button>
           </div>
         </div>
-        
+
         <!-- Moderators -->
         <!-- <div class="rounded-md overflow-hidden mb-4">
           <div class="px-3 py-2 font-medium">Moderators</div>
@@ -157,12 +149,12 @@ const formatNumber = (num) => {
 // Format date for display
 const formatDate = (dateString) => {
   if (!dateString) return 'Unknown date'
-  
+
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    year: 'numeric' 
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
   })
 }
 
@@ -174,7 +166,7 @@ const loadCommunity = async () => {
     const communityData = communityStore.getCommunityById(communityId.value)
     community.value = communityData.value
     mainStore.setCommunity(communityId.value)
-    
+
     // Fetch posts for this community from the store
     await postStore.fetchPostsByCommunity(communityId.value)
   }
