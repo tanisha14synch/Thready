@@ -22,7 +22,7 @@
 
           <!-- Community Name and Details -->
           <div class="flex-1  pb-3">
-            <h1 class="text-base md:text-lg lg:text-xl font-bold">
+            <h1 class="text-xl font-bold">
               {{ community?.name || '' }}
             </h1>
             <div class="flex flex-wrap gap-2 mt-2">
@@ -44,7 +44,7 @@
     <!-- Main Content -->
     <div class="max-w-full mx-auto px-4  flex flex-wrap flex-col md:flex-row">
       <!-- Posts Column -->
-      <div class="flex-1 space-y-4 lg:min-w-[80%]">
+      <div class="flex-1 space-y-4 lg:min-w-[50%]">
         <PostCard v-for="post in posts" :key="post.id" :post="post" />
       </div>
 
