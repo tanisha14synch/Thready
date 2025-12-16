@@ -1,5 +1,5 @@
 <template>
-  <header class="w-full bg-white border-b border-gray-200 sticky top-0 z-50">
+  <header class="w-full bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
     <div class="max-w-full mx-auto px-4 flex items-center justify-between h-12">
       <!-- Left: Logo & Search -->
       <div class="flex items-center gap-4 flex-1">

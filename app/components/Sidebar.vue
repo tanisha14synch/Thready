@@ -9,9 +9,10 @@
 
     <aside
       :class="[
-        'w-64 bg-white min-h-screen border-r border-gray-200',
+        'w-64 bg-white border-r border-gray-200',
         'fixed top-12 left-0 z-50 transition-transform duration-300 overflow-y-auto',
-        'md:relative md:top-0 md:translate-x-0 md:z-auto',
+        'md:fixed md:top-12 md:translate-x-0 md:z-40',
+        'h-[calc(100vh-3rem)]', // Full height minus header (h-12 = 3rem)
         mainStore.isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
