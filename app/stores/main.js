@@ -6,6 +6,8 @@ export const useMainStore = defineStore('main', {
     currentCommunity: null,
     isSidebarOpen: false,
     joinedCommunities: [], // ids of communities the user has joined
+    user: null,
+    authToken: null,
   }),
 
   actions: {
@@ -41,10 +43,15 @@ export const useMainStore = defineStore('main', {
       }
       return this.joinedCommunities.includes(communityId)
     },
+    setAuthSession({ user, token, communityId }) {
+      if (user) this.user = user
+      if (token) this.authToken = token
+      if (communityId) this.joinCommunity(communityId)
+    },
   },
 
   // Persist joinedCommunities so membership stays after reload until user leaves
   persist: {
-    paths: ['joinedCommunities'],
+    paths: ['joinedCommunities', 'user', 'authToken'],
   },
 })
