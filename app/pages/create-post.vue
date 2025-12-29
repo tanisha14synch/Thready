@@ -61,10 +61,14 @@
               </div>
 
               <div v-if="postImage" class="mt-3 relative border rounded-md p-2">
-                <img :src="postImage" class="max-h-[260px] mx-auto object-contain rounded" />
+                <img 
+                  :src="postImage" 
+                  class="max-h-[260px] mx-auto object-contain rounded cursor-pointer hover:opacity-90 transition-opacity"
+                  @click="openImage(postImage)"
+                />
                 <button 
                   @click="removeImage"
-                  class="absolute top-2 right-2 bg-gray-800 bg-opacity-70 text-white rounded-full p-1 hover:bg-opacity-100"
+                  class="absolute top-2 right-2 bg-gray-800 bg-opacity-70 text-white rounded-full p-1 hover:bg-opacity-100 z-10"
                   aria-label="Remove image"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -133,6 +137,14 @@
         </div>
       </div>
     </div>
+
+    <!-- Image Viewer Modal -->
+    <ImageViewer
+        :isOpen="showImageViewer"
+        :imageSrc="selectedImage"
+        alt="Post preview"
+        @close="closeImageViewer"
+    />
   </div>
 </template>
 
@@ -142,6 +154,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useCommunityStore } from '~/stores/communities'
 import { useMainStore } from '~/stores/main'
 import { usePostStore } from '~/stores/posts'
+import ImageViewer from '~/components/ImageViewer.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -158,6 +171,10 @@ const postImage = ref(null)
 const selectedCommunity = ref(null)
 const isSubmitting = ref(false)
 const fileInput = ref(null)
+
+// Image Viewer State
+const showImageViewer = ref(false)
+const selectedImage = ref('')
 
 const isJoined = computed(() => {
   if (!selectedCommunity.value) return false
@@ -200,6 +217,17 @@ const removeImage = () => {
   if (fileInput.value) {
     fileInput.value.value = ''
   }
+}
+
+// Image Viewer Functions
+const openImage = (imageSrc) => {
+  selectedImage.value = imageSrc
+  showImageViewer.value = true
+}
+
+const closeImageViewer = () => {
+  showImageViewer.value = false
+  selectedImage.value = ''
 }
 
 // Submit post

@@ -33,7 +33,8 @@
       <NuxtImg
         v-if="post.image"
         :src="post.image"
-        class="w-full h-[40vh] object-cover rounded-xl"
+        class="w-full h-[40vh] object-cover rounded-xl cursor-pointer hover:opacity-90 transition-opacity"
+        @click="openImage(post.image)"
       />
       <video
         v-else-if="post.video"
@@ -170,6 +171,14 @@
         @cancel="cancelDelete"
     />
 
+    <!-- Image Viewer Modal -->
+    <ImageViewer
+        :isOpen="showImageViewer"
+        :imageSrc="selectedImage"
+        :alt="post.title"
+        @close="closeImageViewer"
+    />
+
   </section>
 </template>
 
@@ -178,6 +187,7 @@ import { ref, computed, toRef, nextTick } from 'vue'
 import { usePostStore } from '~/stores/posts'
 import { getShopifyUser } from '~/utils/shopify'
 import ConfirmationModal from '~/components/ConfirmationModal.vue'
+import ImageViewer from '~/components/ImageViewer.vue'
 
 /* 🧩 Props */
 const props = defineProps({
@@ -201,6 +211,10 @@ const showDeleteModal = ref(false)
 const itemToDelete = ref(null) // ID
 const deleteType = ref(null) // 'post' or 'comment'
 const deleteError = ref(null) // Error message if deletion fails
+
+// Image Viewer State
+const showImageViewer = ref(false)
+const selectedImage = ref('')
 
 const deleteModalTitle = computed(() => deleteType.value === 'post' ? 'Delete Post' : 'Delete Comment')
 const deleteModalMessage = computed(() => {
@@ -298,6 +312,17 @@ async function handleAddComment() {
 function handleShare() {
     shareMessage.value = 'Link copied!'
     setTimeout(() => { shareMessage.value = '' }, 2000)
+}
+
+/* 🖼️ Image Viewer */
+function openImage(imageSrc) {
+    selectedImage.value = imageSrc
+    showImageViewer.value = true
+}
+
+function closeImageViewer() {
+    showImageViewer.value = false
+    selectedImage.value = ''
 }
 
 function formatDate(dateStr) {
