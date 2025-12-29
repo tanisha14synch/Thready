@@ -33,7 +33,7 @@
         </div>
         <div class="flex gap-2 items-center">
           <button
-            class="w-full rounded-full px-3 py-2 border border-gray-300 text-xs mt-2 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full rounded-full px-3 py-2 border-2 border-[#E9D386] bg-[#E9D386] text-white text-xs mt-2 text-left hover:bg-[#D4C070] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             :disabled="!isJoined" @click="handleCreatePost">
             <i class="fas fa-add"></i> Create Post
           </button>
@@ -76,8 +76,8 @@
             </div>
 
             <button
-              class="w-full py-1 rounded-full border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              style="background-color: var(--primary-color);" @click="toggleJoin">
+              class="w-full py-1 rounded-full border-2 border-[#E9D386] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#D4C070] transition-colors"
+              style="background-color: #E9D386; color: white;" @click="toggleJoin">
               <i class="fas" :class="isJoined ? 'fa-check' : 'fa-add'"></i>
               {{ isJoined ? 'Joined' : 'Join Community' }}
             </button>

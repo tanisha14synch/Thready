@@ -18,7 +18,7 @@
             v-model="searchQuery"
             type="text"
             placeholder="Search"
-            class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-blue-500"
+            class="w-full px-4 py-2 bg-gray-100 border border-[#E9D386] rounded-full text-sm focus:outline-none focus:border-[#D4C070] focus:ring-1 focus:ring-[#D4C070] focus:shadow-[0_0_0_2px_rgba(233,211,134,0.2)] transition-all"
             @input="handleSearch"
             @keyup.enter="handleSearchEnter"
             @focus="handleSearchFocus"

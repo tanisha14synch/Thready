@@ -29,11 +29,11 @@
             <input 
               type="text" 
               placeholder="Title" 
-              class="w-full p-3 mb-4 border rounded-md"
+              class="w-full p-3 mb-4 border border-[#E9D386] rounded-md focus:outline-none focus:border-[#D4C070] focus:ring-1 focus:ring-[#D4C070] focus:shadow-[0_0_0_2px_rgba(233,211,134,0.2)] transition-all"
               v-model="postTitle"
             />
             
-            <div class="border rounded-md">
+            <div class="border border-[#E9D386] rounded-md focus-within:border-[#D4C070] focus-within:ring-1 focus-within:ring-[#D4C070] focus-within:shadow-[0_0_0_2px_rgba(233,211,134,0.2)] transition-all">
               <textarea 
                 placeholder="Text (optional)" 
                 class="w-full p-3 min-h-[200px] rounded-md focus:outline-none"
@@ -44,7 +44,7 @@
             <!-- Image Upload (optional) -->
             <div class="rounded-md pt-4">
               <div 
-                class="border-2 border-dashed p-6 rounded-md hover:bg-gray-50 transition-colors cursor-pointer text-center"
+                class="border border-dashed border-[#E9D386] p-6 rounded-md hover:border-[#D4C070] hover:bg-[#E9D386]/10 hover:shadow-[0_0_0_2px_rgba(233,211,134,0.2)] transition-all cursor-pointer text-center"
                 @click="triggerFileInput"
                 @dragover.prevent
                 @drop.prevent="handleDrop"
@@ -77,9 +77,9 @@
           
           <!-- Post Actions -->
           <div class="flex justify-end gap-2">
-            <button class="px-4 py-2 border  rounded-full">Save Draft</button>
+            <button class="px-4 py-2 border-2 border-[#E9D386] text-[#E9D386] rounded-full hover:bg-[#E9D386] hover:text-white transition-colors">Save Draft</button>
             <button 
-              class="px-4 py-2 bg-yellow-400 text-white rounded-full flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-4 py-2 bg-[#E9D386] text-white rounded-full flex items-center gap-2 hover:bg-[#D4C070] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               :disabled="!canSubmitPost || isSubmitting"
               @click="submitPost"
             >

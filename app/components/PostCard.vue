@@ -90,14 +90,14 @@
       <textarea
         ref="textarea"
         v-model="newCommentText"
-        class="w-full p-2 border rounded mb-2 text-sm"
+        class="w-full p-2 border border-[#E9D386] rounded mb-2 text-sm focus:outline-none focus:border-[#D4C070] focus:ring-1 focus:ring-[#D4C070] focus:shadow-[0_0_0_2px_rgba(233,211,134,0.2)] transition-all"
         placeholder="Write a comment..."
         rows="2"
       ></textarea>
       <div class="flex justify-end">
         <button 
           @click="handleAddComment" 
-          class="bg-blue-600 text-white px-4 py-1 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+          class="bg-[#E9D386] text-white px-4 py-1 rounded text-sm hover:bg-[#D4C070] disabled:opacity-50 transition-colors"
           :disabled="!newCommentText.trim() || postStore.loading"
         >
           {{ postStore.loading ? 'Posting...' : 'Post' }}

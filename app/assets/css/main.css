@@ -3,14 +3,14 @@
 
 :root {
     /* Theme Configuration */
-    --theme-color: #13544E;
-    --primary-color: #13544E;
+    --theme-color: #E9D386;
+    --primary-color: #E9D386;
     --secondary-color: #ffffff;
-    --button-color: #13544E;
+    --button-color: #E9D386;
     --text-color: #614e4e;
     --primary-font: 'Libre-Baskerville';
     --secondary-font: 'Almarai';
-    --green-color: #184E50;
+    --green-color: #E9D386;
     --color-primary: var(--primary-color);
     --font-xs: 	0.75rem;
     --font-sm: 0.87rem;
