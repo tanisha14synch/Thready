@@ -5,7 +5,7 @@
       <div class="h-20" style="background: linear-gradient(to right, #E9D386, #D4C070);"></div>
       <div class="px-4 pb-4 -mt-10">
         <div
-          class="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center text-white text-2xl font-bold inline-block"
+          class="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center text-black text-2xl font-bold inline-block"
             :style="`background-color: ${displayUser.avatarColor || '#E9D386'}`"
         >
           <img

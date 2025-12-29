@@ -97,7 +97,7 @@
       <div class="flex justify-end">
         <button 
           @click="handleAddComment" 
-          class="bg-[#E9D386] text-white px-4 py-1 rounded text-sm hover:bg-[#D4C070] disabled:opacity-50 transition-colors"
+          class="bg-[#E9D386] text-black px-4 py-1 rounded text-sm hover:bg-[#D4C070] disabled:opacity-50 transition-colors"
           :disabled="!newCommentText.trim() || postStore.loading"
         >
           {{ postStore.loading ? 'Posting...' : 'Post' }}

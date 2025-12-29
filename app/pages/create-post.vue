@@ -77,13 +77,13 @@
           
           <!-- Post Actions -->
           <div class="flex justify-end gap-2">
-            <button class="px-4 py-2 border-2 border-[#E9D386] text-[#E9D386] rounded-full hover:bg-[#E9D386] hover:text-white transition-colors">Save Draft</button>
+            <button class="px-4 py-2 border-2 border-[#E9D386] text-[#E9D386] rounded-full hover:bg-[#E9D386] hover:text-black transition-colors">Save Draft</button>
             <button 
-              class="px-4 py-2 bg-[#E9D386] text-white rounded-full flex items-center gap-2 hover:bg-[#D4C070] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="px-4 py-2 bg-[#E9D386] text-black rounded-full flex items-center gap-2 hover:bg-[#D4C070] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               :disabled="!canSubmitPost || isSubmitting"
               @click="submitPost"
             >
-              <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <span v-if="isSubmitting" class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
               <span v-if="isSubmitting">Posting...</span>
               <span v-else>Post</span>
             </button>

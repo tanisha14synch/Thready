@@ -71,7 +71,7 @@
           class="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 transition-colors"
         >
           <div
-            class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium"
+            class="w-7 h-7 rounded-full flex items-center justify-center text-black text-xs font-medium"
             :style="`background-color: ${displayUser.avatarColor || '#E9D386'}`"
           >
             <img

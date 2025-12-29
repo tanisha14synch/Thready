@@ -20,7 +20,7 @@
       <div class="p-4 border-b border-gray-200">
         <NuxtLink to="/profile" class="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-md -mx-2">
           <div
-            class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium"
+            class="w-10 h-10 rounded-full flex items-center justify-center text-black text-sm font-medium"
             :style="`background-color: ${displayUser.avatarColor || '#E9D386'}`"
           >
             <img
