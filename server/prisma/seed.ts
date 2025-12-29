@@ -109,7 +109,29 @@ async function main() {
     })
   }
 
-  console.log('Seeded communities and posts')
+  // Seed a demo Shopify user (useful for local testing of /api/user/me once you have a token)
+  // NOTE: This assumes the User model exists in Prisma schema and migrations are applied.
+  try {
+    await prisma.user.upsert({
+      where: { shopifyCustomerId: 'shopify_demo_12345' },
+      update: {},
+      create: {
+        shopifyCustomerId: 'shopify_demo_12345',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        username: 'johndoe',
+        profileImage: null,
+        avatarColor: '#E9D386',
+        communityId: 'the_bar_wardrobe',
+      },
+    })
+  } catch (e) {
+    // If migrations aren't applied yet, don't fail seeding communities/posts
+    console.warn('Skipping demo user seed (User model not migrated yet).')
+  }
+
+  console.log('Seeded communities, posts, and (optionally) demo user')
 }
 
 main()

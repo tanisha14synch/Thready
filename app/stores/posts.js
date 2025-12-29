@@ -4,7 +4,7 @@ import { getShopifyHeaders, getShopifyUser } from '~/utils/shopify'
 import postsSeed from '../data/posts.json'
 
 export const usePostStore = defineStore('postStore', () => {
-  const API_URL = 'http://localhost:3000'
+  const API_URL = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
 
   // State
   const allPosts = ref([])
@@ -12,6 +12,20 @@ export const usePostStore = defineStore('postStore', () => {
   const loading = ref(false)
   const error = ref(null)
   const useLocal = ref(false) // when backend is unreachable, stay local to avoid repeated errors
+  
+  // Helper to get mainStore (lazy import to avoid circular dependency)
+  const getMainStore = () => {
+    if (import.meta.client) {
+      try {
+        // Use dynamic import to avoid circular dependencies
+        const mainStoreModule = require('~/stores/main')
+        return mainStoreModule.useMainStore()
+      } catch (e) {
+        return null
+      }
+    }
+    return null
+  }
   
   // Computed: Displayed posts based on filter
   const posts = computed(() => {
@@ -44,21 +58,41 @@ export const usePostStore = defineStore('postStore', () => {
 
   // Helper to get headers with auth
   const getHeaders = () => {
-    return {
+    const headers = {
       'Content-Type': 'application/json',
-      ...getShopifyHeaders()
     }
+    
+    // Add JWT token from mainStore if available (client-side only)
+    const mainStore = getMainStore()
+    if (mainStore && mainStore.authToken) {
+      headers['Authorization'] = `Bearer ${mainStore.authToken}`
+      if (mainStore.user?.id || mainStore.user?.shopifyCustomerId) {
+        headers['x-user-id'] = mainStore.user.id || mainStore.user.shopifyCustomerId
+      }
+      return headers
+    }
+    
+    // Fallback to legacy headers
+    Object.assign(headers, getShopifyHeaders())
+    return headers
   }
 
   // Actions
 
   // Fetch all posts (reset filter)
+  // If persisted data exists, it's already loaded. This function fetches fresh data from backend.
   const fetchPosts = async () => {
-    loading.value = true
+    // If we have persisted posts, show them immediately (no loading state)
+    const hasPersistedPosts = allPosts.value.length > 0
+    
+    loading.value = !hasPersistedPosts // Only show loading if no persisted data
     error.value = null
     try {
       if (useLocal.value) {
-        allPosts.value = postsSeed.map(normalizePost)
+        // If we're in local mode and have no persisted data, use seed
+        if (!hasPersistedPosts) {
+          allPosts.value = postsSeed.map(normalizePost)
+        }
         filter.value = null
         return
       }
@@ -68,13 +102,21 @@ export const usePostStore = defineStore('postStore', () => {
       if (!response.ok) throw new Error('Failed to fetch posts')
       const data = await response.json()
       
+      // Update with fresh data from backend
       allPosts.value = data.map(normalizePost)
       filter.value = null
+      useLocal.value = false // Reset local mode if fetch succeeds
     } catch (err) {
-      // Fallback to local seed when server is down
-      useLocal.value = true
-      allPosts.value = postsSeed.map(normalizePost)
-      error.value = err.message || 'Using local posts (server unreachable)'
+      // If we have persisted data, keep using it silently
+      if (!hasPersistedPosts) {
+        // Only fallback to seed if no persisted data exists
+        useLocal.value = true
+        allPosts.value = postsSeed.map(normalizePost)
+        error.value = err.message || 'Using local posts (server unreachable)'
+      } else {
+        // Silently use persisted data if backend fails
+        console.warn('Using persisted posts (backend unreachable):', err.message)
+      }
     } finally {
       loading.value = false
     }
@@ -439,12 +481,24 @@ export const usePostStore = defineStore('postStore', () => {
         method: 'DELETE',
         headers: getHeaders()
       })
-      if (!response.ok) throw new Error('Failed to delete post')
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || 'Failed to delete post'
+        throw new Error(errorMessage)
+      }
       
       // Remove from state
       allPosts.value = allPosts.value.filter(p => p.id !== postId)
+      error.value = null // Clear any previous errors
     } catch (err) {
-      // Fallback local delete
+      // Don't delete locally if it's an authorization error
+      if (err.message && err.message.includes('Unauthorized')) {
+        error.value = err.message
+        throw err // Re-throw so component can handle it
+      }
+      
+      // Fallback local delete for other errors
       useLocal.value = true
       allPosts.value = allPosts.value.filter(p => p.id !== postId)
       error.value = err.message || 'Deleted locally (server unreachable)'
@@ -529,7 +583,12 @@ export const usePostStore = defineStore('postStore', () => {
             method: 'DELETE',
             headers: getHeaders()
         })
-        if (!response.ok) throw new Error('Failed to delete comment')
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            const errorMessage = errorData.error || 'Failed to delete comment'
+            throw new Error(errorMessage)
+        }
         
         const postIndex = allPosts.value.findIndex(p => p.id === postId)
         if (postIndex !== -1) {
@@ -541,8 +600,15 @@ export const usePostStore = defineStore('postStore', () => {
                 comments: updatedComments.length
             }
         }
+        error.value = null // Clear any previous errors
     } catch (err) {
-        // Fallback local delete
+        // Don't delete locally if it's an authorization error
+        if (err.message && err.message.includes('Unauthorized')) {
+            error.value = err.message
+            throw err // Re-throw so component can handle it
+        }
+        
+        // Fallback local delete for other errors
         useLocal.value = true
         const postIndex = allPosts.value.findIndex(p => p.id === postId)
         if (postIndex !== -1) {
@@ -576,6 +642,8 @@ export const usePostStore = defineStore('postStore', () => {
     deleteComment
   }
 }, {
-  persist: true
+  persist: {
+    paths: ['allPosts', 'filter', 'useLocal'],
+  }
 })
 

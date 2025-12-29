@@ -4,35 +4,23 @@ export default defineNuxtPlugin(async () => {
   if (import.meta.server) return // Only run on client
   
   const mainStore = useMainStore()
-  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
 
-  // Skip if already have a token
-  if (mainStore.authToken) return
+  // If we already have a token but no user, hydrate user profile.
+  if (!mainStore.authToken) return
+  if (mainStore.user) return
 
   try {
-    const res = await $fetch<{
-      jwt?: string
-      user?: any
-      communityId?: string
-    }>(`${apiBase}/auth/shopify-user`, {
-      method: 'GET',
+    const user = await $fetch(`${apiBase}/api/user/me`, {
       headers: {
-        // Expect frontend to set the Shopify customer token in localStorage or elsewhere
-        'x-shopify-customer-token': typeof localStorage !== 'undefined' ? localStorage.getItem('shopify_customer_token') || '' : '',
+        Authorization: `Bearer ${mainStore.authToken}`,
       },
     })
-
-    if (res && res.jwt) {
-      // @ts-ignore - setAuthSession exists in the store
-      mainStore.setAuthSession({
-        user: res.user,
-        token: res.jwt,
-        communityId: res.communityId,
-      })
-    }
+    // @ts-ignore - store is JS; method exists at runtime
+    mainStore.setAuthSession({ user })
   } catch (err) {
-    // Ignore if not logged in on Shopify; app can still run
-    console.warn('Shopify auth skipped', err)
+    // Token invalid / backend unreachable – keep app usable without auth
+    console.warn('Auth hydrate skipped', err)
   }
 })
 

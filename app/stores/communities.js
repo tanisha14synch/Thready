@@ -7,11 +7,15 @@ export const useCommunityStore = defineStore('communityStore', () => {
   const loading = ref(false)
   const error = ref(null)
   
-  const API_URL = 'http://localhost:3000'
+  const API_URL = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
 
   // Fetch communities from backend
+  // If persisted data exists, it's already loaded. This function fetches fresh data from backend.
   const fetchCommunities = async () => {
-    loading.value = true
+    // If we have persisted communities, show them immediately (no loading state)
+    const hasPersistedCommunities = communities.value.length > 0
+    
+    loading.value = !hasPersistedCommunities // Only show loading if no persisted data
     error.value = null
     try {
       const response = await fetch(`${API_URL}/communities`)
@@ -22,16 +26,24 @@ export const useCommunityStore = defineStore('communityStore', () => {
       if (Array.isArray(data) && data.length > 0) {
         communities.value = data
       } else if (Array.isArray(data)) {
-        // Empty array from backend - keep local data as fallback
-        console.warn('Backend returned empty communities array, keeping local data')
+        // Empty array from backend - keep persisted data as fallback
+        if (!hasPersistedCommunities) {
+          console.warn('Backend returned empty communities array, keeping local data')
+        }
       } else {
         throw new Error('Invalid response format from backend')
       }
       loading.value = false
     } catch (err) {
-      error.value = err.message || 'Failed to fetch communities'
-      // Keep existing communities (from JSON) if fetch fails
-      console.warn('Using local communities data:', err.message)
+      // If we have persisted data, keep using it silently
+      if (!hasPersistedCommunities) {
+        error.value = err.message || 'Failed to fetch communities'
+        // Keep existing communities (from JSON) if fetch fails
+        console.warn('Using local communities data:', err.message)
+      } else {
+        // Silently use persisted data if backend fails
+        console.warn('Using persisted communities (backend unreachable):', err.message)
+      }
       loading.value = false
     }
   }
@@ -80,5 +92,9 @@ export const useCommunityStore = defineStore('communityStore', () => {
     getAllCommunities,
     fetchCommunities,
     fetchCommunityById
+  }
+}, {
+  persist: {
+    paths: ['communities'],
   }
 })

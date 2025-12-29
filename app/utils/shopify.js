@@ -21,6 +21,24 @@ export function getShopifyUser() {
 }
 
 export function getShopifyHeaders() {
+    // Try to get JWT token from mainStore first (preferred)
+    if (import.meta.client) {
+        try {
+            // Use dynamic require for client-side only
+            const { useMainStore } = require('~/stores/main')
+            const mainStore = useMainStore()
+            if (mainStore.authToken) {
+                return {
+                    'Authorization': `Bearer ${mainStore.authToken}`,
+                    'x-user-id': mainStore.user?.id || mainStore.user?.shopifyCustomerId || ''
+                }
+            }
+        } catch (e) {
+            // Store not available yet, fallback to legacy method
+        }
+    }
+    
+    // Fallback to legacy method for backward compatibility
     const user = getShopifyUser()
     if (user) {
         return {
@@ -29,3 +47,6 @@ export function getShopifyHeaders() {
     }
     return {}
 }
+
+
+

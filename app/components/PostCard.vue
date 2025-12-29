@@ -13,9 +13,8 @@
       <!-- Post Actions -->
       <div class="flex gap-2">
         <button 
-          v-if="canDeletePost" 
           @click="initiateDeletePost" 
-          class="text-gray-500 hover:text-red-600"
+          class="text-gray-500 hover:text-red-600 transition-colors"
           title="Delete Post"
         >
           <i class="fas fa-trash"></i>
@@ -143,9 +142,8 @@
                         
                         <!-- Delete -->
                         <button 
-                            v-if="canDeleteComment(comment)" 
                             @click="initiateDeleteComment(comment.id)" 
-                            class="text-gray-400 hover:text-red-600 text-xs"
+                            class="text-gray-400 hover:text-red-600 text-xs transition-colors"
                             title="Delete Comment"
                         >
                             <i class="fas fa-trash"></i>
@@ -202,9 +200,15 @@ const newCommentText = ref('')
 const showDeleteModal = ref(false)
 const itemToDelete = ref(null) // ID
 const deleteType = ref(null) // 'post' or 'comment'
+const deleteError = ref(null) // Error message if deletion fails
 
 const deleteModalTitle = computed(() => deleteType.value === 'post' ? 'Delete Post' : 'Delete Comment')
-const deleteModalMessage = computed(() => `Do you want to delete this ${deleteType.value}?`)
+const deleteModalMessage = computed(() => {
+  if (deleteError.value) {
+    return deleteError.value
+  }
+  return `Do you want to delete this ${deleteType.value}?`
+})
 
 /* 💬 Computed: comments */
 const comments = computed(() => post.value?.commentsList ?? [])
@@ -238,15 +242,24 @@ function cancelDelete() {
     showDeleteModal.value = false
     itemToDelete.value = null
     deleteType.value = null
+    deleteError.value = null
 }
 
 async function confirmDelete() {
-    if (deleteType.value === 'post') {
-        await postStore.deletePost(itemToDelete.value)
-    } else if (deleteType.value === 'comment') {
-        await postStore.deleteComment(post.value.id, itemToDelete.value)
+    deleteError.value = null // Clear previous error
+    try {
+        if (deleteType.value === 'post') {
+            await postStore.deletePost(itemToDelete.value)
+        } else if (deleteType.value === 'comment') {
+            await postStore.deleteComment(post.value.id, itemToDelete.value)
+        }
+        cancelDelete()
+    } catch (error) {
+        // Show error message in modal
+        deleteError.value = error.message || 'Failed to delete. You can only delete your own posts/comments.'
+        console.error('Delete failed:', error)
+        // Keep modal open so user can see the error
     }
-    cancelDelete()
 }
 
 

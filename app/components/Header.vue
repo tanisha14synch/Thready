@@ -1,6 +1,6 @@
 <template>
   <header class="w-full bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
-    <div class="max-w-full mx-auto px-4 flex items-center justify-between h-12">
+    <div class="max-w-full mx-auto px-4 flex items-center justify-between h-14">
       <!-- Left: Logo & Search -->
       <div class="flex items-center gap-4 flex-1">
         <button class="md:hidden" @click="toggleSidebar">
@@ -10,7 +10,7 @@
           <img 
             src="/logo_golden_wbg.avif" 
             alt="Logo" 
-            class="h-8 w-auto object-contain"
+            class="h-9 w-auto object-cover"
           />
         </NuxtLink>
         <div ref="searchContainer" class="hidden md:flex flex-1 max-w-xl relative">

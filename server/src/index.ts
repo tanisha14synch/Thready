@@ -2,6 +2,8 @@ import 'dotenv/config'
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import prismaPlugin from './plugins/prisma.js'
+import authRoutes from './routes/auth.js'
+import userRoutes from './routes/user.js'
 import communityRoutes from './routes/community.js'
 import postRoutes from './routes/post.js'
 import commentRoutes from './routes/comment.js'
@@ -15,6 +17,8 @@ server.register(cors, {
 })
 
 server.register(prismaPlugin)
+server.register(authRoutes)
+server.register(userRoutes)
 server.register(communityRoutes)
 server.register(postRoutes)
 server.register(commentRoutes)
@@ -25,8 +29,9 @@ server.get('/', async (request, reply) => {
 
 const start = async () => {
   try {
-    await server.listen({ port: 3001, host: '0.0.0.0' })
-    console.log(`Server listening on http://localhost:3000`)
+    const port = Number(process.env.PORT || 3001)
+    await server.listen({ port, host: '0.0.0.0' })
+    console.log(`Server listening on http://localhost:${port}`)
   } catch (err) {
     server.log.error(err)
     process.exit(1)

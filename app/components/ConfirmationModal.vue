@@ -5,7 +5,7 @@
         <h3 class="text-lg font-semibold text-gray-900">{{ title }}</h3>
       </div>
       <div class="px-6 py-4">
-        <p class="text-gray-600">{{ message }}</p>
+        <p :class="message.includes('Unauthorized') || message.includes('Failed') ? 'text-red-600 font-medium' : 'text-gray-600'">{{ message }}</p>
       </div>
       <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3">
         <button 
