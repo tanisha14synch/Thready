@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@prisma/client'
 import type { FastifyRequest, FastifyReply } from 'fastify'
+import { getAuthenticatedUserId } from '../utils/auth.js'
 
 interface UpdateCommentBody {
   text: string
@@ -14,11 +15,13 @@ export class CommentController {
 
   /**
    * Update a comment
+   * Requires authentication and ownership verification
    */
   async updateComment(
     request: FastifyRequest<{ Params: { id: string }, Body: UpdateCommentBody }>,
     reply: FastifyReply
   ) {
+    const userId = getAuthenticatedUserId(request)
     const { id } = request.params
     const { text } = request.body
 
@@ -27,11 +30,21 @@ export class CommentController {
     }
 
     try {
-      const comment = await this.prisma.comment.update({
+      // First verify ownership
+      const comment = await this.prisma.comment.findUnique({ where: { id } })
+      if (!comment) {
+        return reply.code(404).send({ error: 'Comment not found' })
+      }
+      
+      if (comment.userId !== userId) {
+        return reply.code(403).send({ error: 'Unauthorized: You can only update your own comments' })
+      }
+
+      const updatedComment = await this.prisma.comment.update({
         where: { id },
         data: { text: text.trim() }
       })
-      return comment
+      return updatedComment
     } catch (error) {
       request.log.error(error)
       return reply.code(400).send({ error: 'Failed to update comment' })
@@ -40,12 +53,13 @@ export class CommentController {
 
   /**
    * Delete a comment
+   * Requires authentication and ownership verification
    */
   async deleteComment(
     request: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply,
-    userId: string
+    reply: FastifyReply
   ) {
+    const userId = getAuthenticatedUserId(request)
     const { id } = request.params
 
     try {
@@ -68,12 +82,13 @@ export class CommentController {
 
   /**
    * Vote on a comment
+   * Requires authentication - user ID comes from JWT token
    */
   async voteComment(
     request: FastifyRequest<{ Params: { id: string }, Body: VoteBody }>,
-    reply: FastifyReply,
-    userId: string
+    reply: FastifyReply
   ) {
+    const userId = getAuthenticatedUserId(request)
     const { id } = request.params
     const { value } = request.body
 
@@ -145,4 +160,7 @@ export class CommentController {
     }
   }
 }
+
+
+
 

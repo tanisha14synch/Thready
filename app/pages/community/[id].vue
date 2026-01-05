@@ -3,7 +3,7 @@
     <!-- Community Header -->
     <div class="relative">
       <!-- Banner Image -->
-      <div class="h-[30vh] w-full overflow-hidden rounded-2xl bg-gray-800">
+      <div class="h-[35vh] w-full overflow-hidden rounded-2xl bg-gray-800 ">
         <NuxtImg v-if="community?.headerImage" :src="community.headerImage" alt="Community header"
           class="w-full h-full object-cover" onerror="this.style.display='none'" />
       </div>

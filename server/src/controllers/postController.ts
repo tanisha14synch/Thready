@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@prisma/client'
 import type { FastifyRequest, FastifyReply } from 'fastify'
+import { getAuthenticatedUserId } from '../utils/auth.js'
 
 interface GetPostsQuery {
   community?: string
@@ -37,10 +38,15 @@ export class PostController {
 
   /**
    * Get all posts, optionally filtered by community
+   * Uses authenticated user ID from JWT for vote data
    */
   async getPosts(request: FastifyRequest<{ Querystring: GetPostsQuery }>, reply: FastifyReply) {
     const { community } = request.query
-    const userId = request.headers['x-user-id'] as string | undefined
+    const userId = request.user?.id // Get from JWT token
+    
+    if (!userId) {
+      return reply.code(401).send({ error: 'Unauthorized' })
+    }
     
     const where = community ? { communityId: community } : {}
     
@@ -97,12 +103,13 @@ export class PostController {
 
   /**
    * Create a new post
+   * Requires authentication - user ID comes from JWT token
    */
   async createPost(
     request: FastifyRequest<{ Body: CreatePostBody }>,
-    reply: FastifyReply,
-    userId: string
+    reply: FastifyReply
   ) {
+    const userId = getAuthenticatedUserId(request)
     const { communityId, user, avatar, title, content, image, video } = request.body
     
     // Validate required fields
@@ -147,20 +154,34 @@ export class PostController {
 
   /**
    * Update a post
+   * Requires authentication and ownership verification
    */
   async updatePost(
     request: FastifyRequest<{ Params: { id: string }, Body: UpdatePostBody }>,
     reply: FastifyReply
   ) {
+    const userId = getAuthenticatedUserId(request)
     const { id } = request.params
     const updates = request.body
     
     try {
-      const post = await this.prisma.post.update({
+      // First verify ownership
+      const post = await this.prisma.post.findUnique({ where: { id } })
+      if (!post) {
+        return reply.code(404).send({ error: 'Post not found' })
+      }
+      
+      // Check ownership - allow legacy posts to be updated by anyone (for backward compatibility)
+      const isLegacy = post.userId === 'legacy' || !post.userId
+      if (!isLegacy && post.userId !== userId) {
+        return reply.code(403).send({ error: 'Unauthorized: You can only update your own posts' })
+      }
+      
+      const updatedPost = await this.prisma.post.update({
         where: { id },
         data: updates
       })
-      return post
+      return updatedPost
     } catch (error) {
       request.log.error(error)
       return reply.code(400).send({ error: 'Failed to update post' })
@@ -169,12 +190,13 @@ export class PostController {
 
   /**
    * Delete a post
+   * Requires authentication and ownership verification
    */
   async deletePost(
     request: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply,
-    userId: string
+    reply: FastifyReply
   ) {
+    const userId = getAuthenticatedUserId(request)
     const { id } = request.params
 
     try {
@@ -199,12 +221,13 @@ export class PostController {
 
   /**
    * Add a comment to a post
+   * Requires authentication - user ID comes from JWT token
    */
   async addComment(
     request: FastifyRequest<{ Params: { id: string }, Body: CommentBody }>,
-    reply: FastifyReply,
-    userId: string
+    reply: FastifyReply
   ) {
+    const userId = getAuthenticatedUserId(request)
     const { id } = request.params
     const { user, avatar, text } = request.body
     
@@ -238,12 +261,13 @@ export class PostController {
 
   /**
    * Vote on a post
+   * Requires authentication - user ID comes from JWT token
    */
   async votePost(
     request: FastifyRequest<{ Params: { id: string }, Body: VoteBody }>,
-    reply: FastifyReply,
-    userId: string
+    reply: FastifyReply
   ) {
+    const userId = getAuthenticatedUserId(request)
     const { id } = request.params
     const { value } = request.body
 

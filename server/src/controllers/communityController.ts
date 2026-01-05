@@ -39,12 +39,14 @@ export class CommunityController {
 
   /**
    * Get a specific community by ID
+   * Uses authenticated user ID from JWT for vote data (if available)
    */
   async getCommunityById(
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ) {
     const { id } = request.params
+    const userId = request.user?.id // Optional - for vote data
     
     try {
       const community = await this.prisma.community.findUnique({
@@ -53,7 +55,12 @@ export class CommunityController {
           moderators: true,
           posts: {
             include: {
-              comments: true
+              comments: {
+                include: {
+                  votes: userId ? { where: { user: userId } } : false
+                }
+              },
+              votes: userId ? { where: { user: userId } } : false
             },
             orderBy: {
               postedAt: 'desc'
@@ -66,14 +73,38 @@ export class CommunityController {
         return reply.code(404).send({ error: 'Community not found' })
       }
 
+      // Map posts to include user vote data
+      const postsWithVotes = community.posts.map((p: any) => {
+        let userVote = 0
+        if (p.votes && p.votes.length > 0) {
+          userVote = p.votes[0].value
+        }
+
+        const commentsList = p.comments.map((c: any) => {
+          let commentUserVote = 0
+          if (c.votes && c.votes.length > 0) {
+            commentUserVote = c.votes[0].value
+          }
+          return {
+            ...c,
+            userVote: commentUserVote,
+            votes: undefined
+          }
+        })
+
+        return {
+          ...p,
+          comments: p.comments.length,
+          commentsList: commentsList,
+          userVote: userVote,
+          votes: undefined
+        }
+      })
+
       return {
         ...community,
         tags: community.tags ? JSON.parse(community.tags) : [],
-        posts: community.posts.map((p: any) => ({
-          ...p,
-          comments: p.comments.length,
-          commentsList: p.comments
-        }))
+        posts: postsWithVotes
       }
     } catch (error) {
       request.log.error(error)
