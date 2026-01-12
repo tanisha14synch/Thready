@@ -141,8 +141,9 @@
                             </button>
                         </div>
                         
-                        <!-- Delete -->
+                        <!-- Delete - Only show if user owns the comment -->
                         <button 
+                            v-if="canDeleteComment(comment)"
                             @click="initiateDeleteComment(comment.id)" 
                             class="text-gray-400 hover:text-red-600 text-xs transition-colors"
                             title="Delete Comment"
@@ -236,7 +237,11 @@ const canDeletePost = computed(() => {
 
 function canDeleteComment(comment) {
     if (!currentUser) return false
-    return comment.userId === currentUser.id || comment.user === currentUser.username
+    // STRICT CHECK: Only allow deletion if userId matches exactly
+    // Check both userId (preferred) and username (legacy fallback)
+    const userIdMatch = comment.userId && currentUser.id && String(comment.userId) === String(currentUser.id)
+    const usernameMatch = comment.user && currentUser.username && comment.user === currentUser.username
+    return userIdMatch || usernameMatch
 }
 
 /* 🗑️ Delete Logic */

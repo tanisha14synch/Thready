@@ -1,6 +1,12 @@
 import type { PrismaClient } from '@prisma/client'
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { getAuthenticatedUserId } from '../utils/auth.js'
+import { 
+  checkCommentOwnershipStrict,
+  logUnauthorizedAccess,
+  validateNoUserIdInBody,
+  sanitizeRequestBody 
+} from '../utils/authorization.js'
 
 interface UpdateCommentBody {
   text: string
@@ -16,6 +22,7 @@ export class CommentController {
   /**
    * Update a comment
    * Requires authentication and ownership verification
+   * Validates that no userId is present in request body
    */
   async updateComment(
     request: FastifyRequest<{ Params: { id: string }, Body: UpdateCommentBody }>,
@@ -23,7 +30,23 @@ export class CommentController {
   ) {
     const userId = getAuthenticatedUserId(request)
     const { id } = request.params
-    const { text } = request.body
+    
+    // Security: Validate that no user ID is in request body
+    const bodyValidation = validateNoUserIdInBody(request.body)
+    if (!bodyValidation.valid) {
+      request.log.warn({
+        type: 'security_validation_failed',
+        endpoint: 'updateComment',
+        userId,
+        commentId: id,
+        error: bodyValidation.error
+      })
+      return reply.code(400).send({ error: bodyValidation.error })
+    }
+    
+    // Sanitize body to remove any user ID fields
+    const sanitizedBody = sanitizeRequestBody(request.body)
+    const { text } = sanitizedBody
 
     if (!text || !text.trim()) {
       return reply.code(400).send({ error: 'Comment text is required' })
@@ -36,8 +59,11 @@ export class CommentController {
         return reply.code(404).send({ error: 'Comment not found' })
       }
       
-      if (comment.userId !== userId) {
-        return reply.code(403).send({ error: 'Unauthorized: You can only update your own comments' })
+      // Check ownership using strict mode (no legacy comments allowed)
+      const ownershipCheck = checkCommentOwnershipStrict(comment.userId, userId)
+      if (!ownershipCheck.authorized) {
+        logUnauthorizedAccess(request, 'comment', id, comment.userId || 'unknown', userId)
+        return reply.code(ownershipCheck.error!.code).send({ error: ownershipCheck.error!.message })
       }
 
       const updatedComment = await this.prisma.comment.update({
@@ -47,36 +73,116 @@ export class CommentController {
       return updatedComment
     } catch (error) {
       request.log.error(error)
-      return reply.code(400).send({ error: 'Failed to update comment' })
+      return reply.code(500).send({ error: 'Failed to update comment' })
     }
   }
 
   /**
    * Delete a comment
-   * Requires authentication and ownership verification
+   * STRICT OWNERSHIP ENFORCEMENT:
+   * - User can ONLY delete comments created by their own user ID
+   * - comment.userId MUST equal authenticatedUser.id (strict equality)
+   * - No exceptions: legacy/null comments cannot be deleted
+   * - Server-side validation only (no frontend checks)
+   * - Returns 403 Forbidden for any unauthorized attempt
+   * - Prevents deletion via manipulated comment IDs
    */
   async deleteComment(
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ) {
-    const userId = getAuthenticatedUserId(request)
+    const authenticatedUserId = getAuthenticatedUserId(request)
     const { id } = request.params
 
     try {
-      const comment = await this.prisma.comment.findUnique({ where: { id } })
-      if (!comment) return reply.code(404).send({ error: 'Comment not found' })
-
-      if (comment.userId !== userId) {
-        return reply.code(403).send({ error: 'Unauthorized: You can only delete your own comments' })
+      // Step 1: Fetch the comment from database
+      const comment = await this.prisma.comment.findUnique({ 
+        where: { id },
+        select: {
+          id: true,
+          userId: true,
+          text: true,
+          postId: true
+        }
+      })
+      
+      // Step 2: Verify comment exists
+      if (!comment) {
+        return reply.code(404).send({ error: 'Comment not found' })
       }
 
+      // Step 3: STRICT OWNERSHIP VERIFICATION
+      // Convert both to strings to ensure exact comparison (no type mismatch)
+      const commentUserIdStr = String(comment.userId || '').trim()
+      const authenticatedUserIdStr = String(authenticatedUserId || '').trim()
+      
+      // Log for debugging
+      request.log.info({
+        type: 'comment_deletion_attempt',
+        commentId: id,
+        commentUserId: commentUserIdStr,
+        authenticatedUserId: authenticatedUserIdStr,
+        userIdsMatch: commentUserIdStr === authenticatedUserIdStr,
+        timestamp: new Date().toISOString()
+      })
+      
+      // STRICT CHECK: comment.userId MUST equal authenticatedUser.id (exact string match)
+      // No exceptions, no legacy comments, no null checks
+      if (!commentUserIdStr || commentUserIdStr === 'legacy' || commentUserIdStr === 'null') {
+        request.log.warn({
+          type: 'comment_deletion_blocked_invalid_userid',
+          commentId: id,
+          commentUserId: commentUserIdStr,
+          authenticatedUserId: authenticatedUserIdStr,
+          reason: 'Comment has invalid or legacy userId'
+        })
+        return reply.code(403).send({ 
+          error: 'Forbidden: Comment ownership cannot be verified' 
+        })
+      }
+      
+      // STRICT EQUALITY CHECK - must match exactly
+      if (commentUserIdStr !== authenticatedUserIdStr) {
+        // Log unauthorized access attempt with full details
+        logUnauthorizedAccess(
+          request, 
+          'comment', 
+          id, 
+          commentUserIdStr, 
+          authenticatedUserIdStr
+        )
+        
+        // Return 403 Forbidden - block action completely
+        return reply.code(403).send({ 
+          error: 'Forbidden: You can only delete your own comments' 
+        })
+      }
+
+      // Step 5: Only proceed with deletion if all checks pass
       await this.prisma.comment.delete({
         where: { id }
       })
+      
+      request.log.info({
+        type: 'comment_deleted',
+        commentId: id,
+        userId: authenticatedUserId,
+        timestamp: new Date().toISOString()
+      })
+      
       return { success: true }
-    } catch (error) {
-      request.log.error(error)
-      return reply.code(400).send({ error: 'Failed to delete comment' })
+    } catch (error: any) {
+      // Log error but don't expose internal details
+      request.log.error({
+        type: 'comment_deletion_error',
+        commentId: id,
+        userId: authenticatedUserId,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      })
+      
+      // Return generic error to prevent information leakage
+      return reply.code(500).send({ error: 'Failed to delete comment' })
     }
   }
 

@@ -1,17 +1,20 @@
 import type { PrismaClient } from '@prisma/client'
 import type { FastifyRequest, FastifyReply } from 'fastify'
+import { getAuthenticatedUserId } from '../utils/auth.js'
 
 export class UserController {
   constructor(private prisma: PrismaClient) {}
 
   /**
    * Get current user profile
+   * Strictly returns only the authenticated user's data
+   * User ID is always from JWT token, never from request parameters
    */
   async getCurrentUser(request: FastifyRequest, reply: FastifyReply) {
-    const userId = request.user?.id
-    if (!userId) return reply.code(401).send({ error: 'Unauthorized' })
+    const userId = getAuthenticatedUserId(request)
 
     try {
+      // Always query by authenticated user ID - no parameters can override this
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         select: {
@@ -28,7 +31,9 @@ export class UserController {
         },
       })
 
-      if (!user) return reply.code(404).send({ error: 'User not found' })
+      if (!user) {
+        return reply.code(404).send({ error: 'User not found' })
+      }
 
       return user
     } catch (error) {
@@ -39,12 +44,14 @@ export class UserController {
 
   /**
    * Get user's community
+   * Strictly returns only the authenticated user's community
+   * User ID is always from JWT token, never from request parameters
    */
   async getUserCommunity(request: FastifyRequest, reply: FastifyReply) {
-    const userId = request.user?.id
-    if (!userId) return reply.code(401).send({ error: 'Unauthorized' })
+    const userId = getAuthenticatedUserId(request)
 
     try {
+      // Always query by authenticated user ID - no parameters can override this
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         select: {
@@ -52,7 +59,9 @@ export class UserController {
         }
       })
 
-      if (!user) return reply.code(404).send({ error: 'User not found' })
+      if (!user) {
+        return reply.code(404).send({ error: 'User not found' })
+      }
 
       return {
         communityId: user.communityId || null,
@@ -63,6 +72,8 @@ export class UserController {
     }
   }
 }
+
+
 
 
 

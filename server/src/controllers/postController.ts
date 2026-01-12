@@ -1,6 +1,12 @@
 import type { PrismaClient } from '@prisma/client'
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { getAuthenticatedUserId } from '../utils/auth.js'
+import { 
+  checkOwnershipOrForbid, 
+  logUnauthorizedAccess,
+  validateNoUserIdInBody,
+  sanitizeRequestBody 
+} from '../utils/authorization.js'
 
 interface GetPostsQuery {
   community?: string
@@ -104,13 +110,29 @@ export class PostController {
   /**
    * Create a new post
    * Requires authentication - user ID comes from JWT token
+   * Validates that no userId is present in request body (security check)
    */
   async createPost(
     request: FastifyRequest<{ Body: CreatePostBody }>,
     reply: FastifyReply
   ) {
     const userId = getAuthenticatedUserId(request)
-    const { communityId, user, avatar, title, content, image, video } = request.body
+    
+    // Security: Validate that no user ID is in request body
+    const bodyValidation = validateNoUserIdInBody(request.body, ['user']) // 'user' is display name, not ID
+    if (!bodyValidation.valid) {
+      request.log.warn({
+        type: 'security_validation_failed',
+        endpoint: 'createPost',
+        userId,
+        error: bodyValidation.error
+      })
+      return reply.code(400).send({ error: bodyValidation.error })
+    }
+    
+    // Sanitize body to remove any user ID fields
+    const sanitizedBody = sanitizeRequestBody(request.body)
+    const { communityId, user, avatar, title, content, image, video } = sanitizedBody
     
     // Validate required fields
     if (!title || !communityId) {
@@ -155,6 +177,7 @@ export class PostController {
   /**
    * Update a post
    * Requires authentication and ownership verification
+   * Validates that no userId is present in request body
    */
   async updatePost(
     request: FastifyRequest<{ Params: { id: string }, Body: UpdatePostBody }>,
@@ -162,7 +185,22 @@ export class PostController {
   ) {
     const userId = getAuthenticatedUserId(request)
     const { id } = request.params
-    const updates = request.body
+    
+    // Security: Validate that no user ID is in request body
+    const bodyValidation = validateNoUserIdInBody(request.body)
+    if (!bodyValidation.valid) {
+      request.log.warn({
+        type: 'security_validation_failed',
+        endpoint: 'updatePost',
+        userId,
+        postId: id,
+        error: bodyValidation.error
+      })
+      return reply.code(400).send({ error: bodyValidation.error })
+    }
+    
+    // Sanitize body to remove any user ID fields
+    const updates = sanitizeRequestBody(request.body)
     
     try {
       // First verify ownership
@@ -171,10 +209,11 @@ export class PostController {
         return reply.code(404).send({ error: 'Post not found' })
       }
       
-      // Check ownership - allow legacy posts to be updated by anyone (for backward compatibility)
-      const isLegacy = post.userId === 'legacy' || !post.userId
-      if (!isLegacy && post.userId !== userId) {
-        return reply.code(403).send({ error: 'Unauthorized: You can only update your own posts' })
+      // Check ownership using centralized authorization utility
+      const ownershipCheck = checkOwnershipOrForbid(post.userId, userId, 'post')
+      if (!ownershipCheck.authorized) {
+        logUnauthorizedAccess(request, 'post', id, post.userId || 'unknown', userId)
+        return reply.code(ownershipCheck.error!.code).send({ error: ownershipCheck.error!.message })
       }
       
       const updatedPost = await this.prisma.post.update({
@@ -201,12 +240,15 @@ export class PostController {
 
     try {
       const post = await this.prisma.post.findUnique({ where: { id } })
-      if (!post) return reply.code(404).send({ error: 'Post not found' })
+      if (!post) {
+        return reply.code(404).send({ error: 'Post not found' })
+      }
 
-      // Allow delete if user owns the post OR post was legacy/seeded
-      const isLegacy = post.userId === 'legacy' || !post.userId
-      if (!isLegacy && post.userId !== userId) {
-        return reply.code(403).send({ error: 'Unauthorized: You can only delete your own posts' })
+      // Check ownership using centralized authorization utility
+      const ownershipCheck = checkOwnershipOrForbid(post.userId, userId, 'post')
+      if (!ownershipCheck.authorized) {
+        logUnauthorizedAccess(request, 'post', id, post.userId || 'unknown', userId)
+        return reply.code(ownershipCheck.error!.code).send({ error: ownershipCheck.error!.message })
       }
 
       await this.prisma.post.delete({
@@ -215,13 +257,14 @@ export class PostController {
       return { success: true }
     } catch (error) {
       request.log.error(error)
-      return reply.code(400).send({ error: 'Failed to delete post' })
+      return reply.code(500).send({ error: 'Failed to delete post' })
     }
   }
 
   /**
    * Add a comment to a post
    * Requires authentication - user ID comes from JWT token
+   * Validates that no userId is present in request body
    */
   async addComment(
     request: FastifyRequest<{ Params: { id: string }, Body: CommentBody }>,
@@ -229,7 +272,23 @@ export class PostController {
   ) {
     const userId = getAuthenticatedUserId(request)
     const { id } = request.params
-    const { user, avatar, text } = request.body
+    
+    // Security: Validate that no user ID is in request body
+    const bodyValidation = validateNoUserIdInBody(request.body, ['user']) // 'user' is display name, not ID
+    if (!bodyValidation.valid) {
+      request.log.warn({
+        type: 'security_validation_failed',
+        endpoint: 'addComment',
+        userId,
+        postId: id,
+        error: bodyValidation.error
+      })
+      return reply.code(400).send({ error: bodyValidation.error })
+    }
+    
+    // Sanitize body to remove any user ID fields
+    const sanitizedBody = sanitizeRequestBody(request.body)
+    const { user, avatar, text } = sanitizedBody
     
     if (!text || !text.trim()) {
       return reply.code(400).send({ error: 'Comment text is required' })
