@@ -6,11 +6,7 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate deploy",
-    "prisma:studio": "prisma studio",
-    "postinstall": "prisma generate"
+    "preview": "nuxt preview"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
@@ -24,12 +20,10 @@
     "tailwindcss": "^4.1.14",
     "vue": "^3.5.22",
     "vue-router": "^4.5.1",
-    "@prisma/client": "^5.22.0",
     "jsonwebtoken": "^9.0.3",
     "slugify": "^1.6.6"
   },
   "devDependencies": {
-    "@nuxtjs/google-fonts": "^3.2.0",
-    "prisma": "^5.22.0"
+    "@nuxtjs/google-fonts": "^3.2.0"
   }
 }
