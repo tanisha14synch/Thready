@@ -27,9 +27,34 @@
       </div>
     </div>
 
+    <!-- Not Authenticated Message -->
+    <div v-if="!isAuthenticated" class="bg-gradient-to-br from-[#E9D386]/10 to-[#D4C070]/5 border-2 border-dashed border-[#E9D386]/30 rounded-xl p-10 mb-4 text-center">
+      <div class="mb-5 w-20 h-20 rounded-full bg-[#E9D386]/20 flex items-center justify-center mx-auto">
+        <i class="fas fa-user-circle text-[#D4C070] text-4xl"></i>
+      </div>
+      <h2 class="text-2xl font-bold mb-3 text-gray-800">Welcome to The Bar Wardrobe</h2>
+      <p class="text-gray-600 mb-2 text-base">Sign in with your Shopify account to access your profile,</p>
+      <p class="text-gray-600 mb-8 text-base">manage your communities, and connect with others.</p>
+      <button
+        @click="handleLogin"
+        class="px-8 py-3 bg-[#E9D386] hover:bg-[#D4C070] text-black rounded-full font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
+      >
+        <i class="fas fa-sign-in-alt"></i>
+        <span>Sign in with Shopify</span>
+      </button>
+    </div>
+
     <!-- Profile Info Card -->
-    <div class="bg-white border border-gray-300 rounded-md p-4 mb-4">
-      <h2 class="text-lg font-semibold mb-4 text-gray-900">About</h2>
+    <div v-else class="bg-white border border-gray-300 rounded-md p-4 mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-900">About</h2>
+        <button
+          @click="handleLogout"
+          class="px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+        >
+          Sign Out
+        </button>
+      </div>
       <div class="space-y-3">
         <div>
           <label class="text-xs text-gray-500 uppercase tracking-wide">Email</label>
@@ -49,7 +74,7 @@
     </div>
 
     <!-- Joined Communities Card -->
-    <div class="bg-white border border-gray-300 rounded-md p-4">
+    <div v-if="isAuthenticated" class="bg-white border border-gray-300 rounded-md p-4">
       <h2 class="text-lg font-semibold mb-4 text-gray-900">Joined Communities</h2>
       <div v-if="joinedCommunities.length > 0" class="space-y-2">
         <NuxtLink
@@ -87,12 +112,36 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useMainStore } from '~/stores/main'
 import { useCommunityStore } from '~/stores/communities'
 import { getShopifyUser } from '~/utils/shopify'
 
+const router = useRouter()
 const mainStore = useMainStore()
 const communityStore = useCommunityStore()
+
+const isAuthenticated = computed(() => {
+  return mainStore.isAuthenticated
+})
+
+const handleLogin = () => {
+  mainStore.login()
+}
+
+const handleLogout = async () => {
+  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
+  try {
+    await $fetch(`${apiBase}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+  } catch (e) {
+    console.warn('Logout request failed:', e)
+  }
+  mainStore.logout()
+  router.push('/')
+}
 
 // Default user to show when no one is logged in
 const defaultUser = {

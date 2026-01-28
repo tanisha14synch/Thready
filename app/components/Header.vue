@@ -66,7 +66,18 @@
 
       <!-- Right: User Actions -->
       <div class="flex items-center gap-2">
+        <!-- Show Login Button if not authenticated -->
+        <button
+          v-if="!isAuthenticated"
+          @click="handleLogin"
+          class="flex items-center gap-2 px-4 py-2 bg-[#E9D386] hover:bg-[#D4C070] text-black rounded-full text-sm font-medium transition-colors"
+        >
+          <span>Sign in with Shopify</span>
+        </button>
+
+        <!-- Show User Profile if authenticated -->
         <NuxtLink
+          v-else
           to="/profile"
           class="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 transition-colors"
         >
@@ -135,6 +146,14 @@ const shopifyUser = computed(() => {
 const displayUser = computed(() => {
   return mainStore.user || shopifyUser.value || defaultUser
 })
+
+const isAuthenticated = computed(() => {
+  return mainStore.isAuthenticated
+})
+
+const handleLogin = () => {
+  mainStore.login()
+}
 
 // Filter communities based on search query
 const filteredCommunities = computed(() => {

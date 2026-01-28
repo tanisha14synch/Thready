@@ -2,25 +2,70 @@ import type { FastifyInstance } from 'fastify'
 import { AuthController } from '../controllers/authController.js'
 
 export default async function authRoutes(server: FastifyInstance) {
-  const controller = new AuthController(server.prisma)
+  try {
+    // Test route to verify routes are loading
+    server.get('/test-auth-routes', async () => {
+      return { message: 'Auth routes are loaded successfully!' }
+    })
 
-  // OAuth 2.0: Initiate Shopify OAuth flow
-  server.get('/auth/shopify/authorize', async (request, reply) => {
-    return controller.initiateOAuth(request, reply)
-  })
+    const controller = new AuthController(server.prisma)
 
-  // OAuth 2.0: Handle Shopify callback
-  server.get('/auth/shopify/callback', async (request, reply) => {
-    return controller.handleOAuthCallback(request, reply)
-  })
+    // ===========================================
+    // CUSTOMER ACCOUNT API OAUTH 2.0 FLOW
+    // ===========================================
 
-  // Legacy: Shopify customer login redirect (HMAC-based)
-  server.get('/auth/shopify', async (request, reply) => {
-    return controller.handleShopifyRedirect(request, reply)
-  })
+    // GET /auth/shopify/login
+    // Initiates Customer Account API OAuth flow - redirects to Shopify
+    server.get('/auth/shopify/login', async (request, reply) => {
+      return controller.initiateCustomerAccountOAuth(request, reply)
+    })
 
-  // Login required endpoint
-  server.get('/login-required', async () => {
-    return { error: 'login_required' }
-  })
+    // GET /auth/shopify/callback
+    // Handles Customer Account API OAuth callback from Shopify
+    server.get('/auth/shopify/callback', async (request, reply) => {
+      return controller.handleCustomerAccountCallback(request, reply)
+    })
+
+    // GET /auth/me
+    // Returns current authenticated user from session cookie
+    server.get('/auth/me', async (request, reply) => {
+      return controller.getCurrentSession(request, reply)
+    })
+
+    // POST /auth/logout
+    // Clears session cookie
+    server.post('/auth/logout', async (request, reply) => {
+      return controller.logout(request, reply)
+    })
+
+    // POST /auth/refresh
+    // Refreshes the session token
+    server.post('/auth/refresh', async (request, reply) => {
+      return controller.refreshSession(request, reply)
+    })
+
+    // ===========================================
+    // LEGACY ENDPOINTS (for backward compatibility)
+    // ===========================================
+
+    // OAuth 2.0: Initiate Shopify OAuth flow (legacy - redirects to Customer Account API)
+    server.get('/auth/shopify/authorize', async (request, reply) => {
+      return controller.initiateOAuth(request, reply)
+    })
+
+    // Legacy: Shopify customer login redirect (HMAC-based)
+    server.get('/auth/shopify', async (request, reply) => {
+      return controller.handleShopifyRedirect(request, reply)
+    })
+
+    // Login required endpoint
+    server.get('/login-required', async () => {
+      return { error: 'login_required' }
+    })
+
+    server.log.info('Auth routes registered successfully')
+  } catch (error: any) {
+    server.log.error('Error registering auth routes:', error)
+    throw error
+  }
 }

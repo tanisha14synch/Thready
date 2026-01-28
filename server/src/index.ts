@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import cookie from '@fastify/cookie'
 import prismaPlugin from './plugins/prisma.js'
 import authRoutes from './routes/auth.js'
 import userRoutes from './routes/user.js'
@@ -9,11 +10,19 @@ import postRoutes from './routes/post.js'
 import commentRoutes from './routes/comment.js'
 
 const server = Fastify({
-  logger: true
+  logger: true,
+  trustProxy: true // Required if behind reverse proxy
+})
+
+// Cookie support for session management
+server.register(cookie, {
+  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET || 'your-session-secret-change-in-production',
+  parseOptions: {}
 })
 
 server.register(cors, { 
-  origin: true 
+  origin: true,
+  credentials: true // Allow cookies in CORS
 })
 
 server.register(prismaPlugin)

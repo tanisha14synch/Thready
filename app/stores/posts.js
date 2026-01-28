@@ -353,6 +353,7 @@ export const usePostStore = defineStore('postStore', () => {
   // Add Comment
   const addComment = async (postId, text) => {
     loading.value = true
+    error.value = null
     try {
       const user = getShopifyUser() || { username: 'Anonymous', avatar: '' }
       
@@ -368,7 +369,17 @@ export const usePostStore = defineStore('postStore', () => {
         })
       })
       
-      if (!response.ok) throw new Error('Failed to add comment')
+      if (!response.ok) {
+        // Handle authentication errors
+        if (response.status === 401 || response.status === 403) {
+          const errorData = await response.json().catch(() => ({}))
+          const errorMessage = errorData.error || 'Please sign in to add a comment'
+          error.value = errorMessage
+          throw new Error(errorMessage)
+        }
+        throw new Error('Failed to add comment')
+      }
+      
       const newComment = await response.json()
       
       const index = allPosts.value.findIndex(p => p.id === postId)
@@ -384,7 +395,13 @@ export const usePostStore = defineStore('postStore', () => {
       }
       return newComment
     } catch (err) {
-      // Fallback: add comment locally
+      // Don't fallback to local mode for authentication errors
+      if (err.message && (err.message.includes('sign in') || err.message.includes('authenticated') || err.message.includes('Unauthorized'))) {
+        error.value = err.message
+        throw err // Re-throw so component can handle it (e.g., show login prompt)
+      }
+      
+      // Fallback: add comment locally only for network/server errors
       useLocal.value = true
       const user = getShopifyUser() || { id: 'demo-user', username: 'Anonymous', avatar: '' }
       const localComment = {

@@ -10,6 +10,12 @@ export const useMainStore = defineStore('main', {
     authToken: null,
   }),
 
+  getters: {
+    isAuthenticated() {
+      return !!(this.user && this.authToken)
+    },
+  },
+
   actions: {
     toggleSidebar() {
       this.isSidebarOpen = !this.isSidebarOpen
@@ -47,6 +53,15 @@ export const useMainStore = defineStore('main', {
       if (user) this.user = user
       if (token) this.authToken = token
       if (communityId) this.joinCommunity(communityId)
+    },
+    logout() {
+      this.user = null
+      this.authToken = null
+    },
+    login() {
+      const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
+      const returnTo = window.location.pathname || '/'
+      window.location.href = `${apiBase}/auth/shopify/login?returnTo=${encodeURIComponent(returnTo)}`
     },
   },
 

@@ -1,12 +1,12 @@
 import type { FastifyInstance } from 'fastify'
 import { PostController } from '../controllers/postController.js'
-import { requireJwt } from '../utils/jwt.js'
+import { requireJwt, optionalJwt } from '../utils/jwt.js'
 
 export default async function postRoutes(server: FastifyInstance) {
   const controller = new PostController(server.prisma)
 
-  // Get all posts (public, but uses authenticated user for vote data)
-  server.get<{ Querystring: { community?: string } }>('/posts', { preHandler: requireJwt }, async (request, reply) => {
+  // Get all posts (public – optional auth for vote data; unauthenticated users can still see posts)
+  server.get<{ Querystring: { community?: string } }>('/posts', { preHandler: optionalJwt }, async (request, reply) => {
     return controller.getPosts(request, reply)
   })
 

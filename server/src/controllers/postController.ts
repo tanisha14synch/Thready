@@ -48,11 +48,7 @@ export class PostController {
    */
   async getPosts(request: FastifyRequest<{ Querystring: GetPostsQuery }>, reply: FastifyReply) {
     const { community } = request.query
-    const userId = request.user?.id // Get from JWT token
-    
-    if (!userId) {
-      return reply.code(401).send({ error: 'Unauthorized' })
-    }
+    const userId = request.user?.id // Optional: from JWT when present; unauthenticated users can still view posts
     
     const where = community ? { communityId: community } : {}
     

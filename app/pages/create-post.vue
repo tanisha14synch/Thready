@@ -20,7 +20,22 @@
           <div v-else class="p-4 bg-red-100 text-red-700 rounded-md mb-4">
              Please select a community from the home page or a community page to create a post.
           </div>
-          <div v-if="selectedCommunity && !isJoined" class="p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md mb-4">
+          <!-- Authentication Required -->
+          <div v-if="!isAuthenticated" class="mb-6 flex flex-col items-center justify-center py-8 px-6 bg-gradient-to-br from-[#E9D386]/10 to-[#D4C070]/5 border-2 border-dashed border-[#E9D386]/30 rounded-xl">
+            <div class="mb-4 w-16 h-16 rounded-full bg-[#E9D386]/20 flex items-center justify-center">
+              <i class="fas fa-edit text-[#D4C070] text-2xl"></i>
+            </div>
+            <h3 class="text-gray-800 font-semibold mb-2 text-lg">Sign in to create a post</h3>
+            <p class="text-gray-600 text-sm mb-6 text-center max-w-md">Join the community and share your thoughts, ideas, and experiences with others.</p>
+            <button
+              @click="handleLogin"
+              class="px-6 py-3 bg-[#E9D386] hover:bg-[#D4C070] text-black rounded-full text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+            >
+              <i class="fas fa-sign-in-alt"></i>
+              <span>Sign in with Shopify</span>
+            </button>
+          </div>
+          <div v-else-if="selectedCommunity && !isJoined" class="p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md mb-4">
             Join this community to create a post.
           </div>
           
@@ -181,9 +196,17 @@ const isJoined = computed(() => {
   return mainStore.isJoined(selectedCommunity.value.id)
 })
 
-const canSubmitPost = computed(() => {
-  return selectedCommunity.value && postTitle.value.trim().length > 0 && isJoined.value
+const isAuthenticated = computed(() => {
+  return mainStore.isAuthenticated
 })
+
+const canSubmitPost = computed(() => {
+  return isAuthenticated.value && selectedCommunity.value && postTitle.value.trim().length > 0 && isJoined.value
+})
+
+const handleLogin = () => {
+  mainStore.login()
+}
 
 // File Upload Handlers
 const triggerFileInput = () => {
@@ -232,6 +255,11 @@ const closeImageViewer = () => {
 
 // Submit post
 const submitPost = async () => {
+  if (!isAuthenticated.value) {
+    handleLogin()
+    return
+  }
+  
   if (!canSubmitPost.value || isSubmitting.value) return
 
   isSubmitting.value = true

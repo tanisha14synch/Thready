@@ -13,6 +13,7 @@
       <!-- Post Actions -->
       <div class="flex gap-2">
         <button 
+          v-if="canDeletePost"
           @click="initiateDeletePost" 
           class="text-gray-500 hover:text-red-600 transition-colors"
           title="Delete Post"
@@ -68,6 +69,7 @@
         <button
           class="ml-2 p-2 border rounded-full text-xs border-gray-400 mt-2"
           @click="toggleComment"
+          :title="!isAuthenticated ? 'Sign in to comment' : 'Add a comment'"
         >
           <i class="fas fa-comment"></i> Comment
         </button>
@@ -88,22 +90,41 @@
 
     <!-- 🗨️ Comments Section -->
     <div v-if="showComment" class="mt-4 bg-gray-50 p-4 rounded-lg">
-      <textarea
-        ref="textarea"
-        v-model="newCommentText"
-        class="w-full p-2 border border-[#E9D386] rounded mb-2 text-sm focus:outline-none focus:border-[#D4C070] focus:ring-1 focus:ring-[#D4C070] focus:shadow-[0_0_0_2px_rgba(233,211,134,0.2)] transition-all"
-        placeholder="Write a comment..."
-        rows="2"
-      ></textarea>
-      <div class="flex justify-end">
-        <button 
-          @click="handleAddComment" 
-          class="bg-[#E9D386] text-black px-4 py-1 rounded text-sm hover:bg-[#D4C070] disabled:opacity-50 transition-colors"
-          :disabled="!newCommentText.trim() || postStore.loading"
+      <!-- Authentication Required Message -->
+      <div v-if="!isAuthenticated" class="mb-4 flex flex-col items-center justify-center py-6 px-4 bg-gradient-to-br from-[#E9D386]/10 to-[#D4C070]/5 border-2 border-dashed border-[#E9D386]/30 rounded-lg">
+        <div class="mb-3 w-12 h-12 rounded-full bg-[#E9D386]/20 flex items-center justify-center">
+          <i class="fas fa-lock text-[#D4C070] text-lg"></i>
+        </div>
+        <p class="text-gray-700 font-medium mb-1 text-sm">Sign in to join the conversation</p>
+        <p class="text-gray-500 text-xs mb-4">Share your thoughts and connect with the community</p>
+        <button
+          @click="handleLogin"
+          class="px-6 py-2 bg-[#E9D386] hover:bg-[#D4C070] text-black rounded-full text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
         >
-          {{ postStore.loading ? 'Posting...' : 'Post' }}
+          <i class="fas fa-sign-in-alt"></i>
+          <span>Sign in with Shopify</span>
         </button>
       </div>
+      
+      <!-- Comment Form (only shown if authenticated) -->
+      <template v-else>
+        <textarea
+          ref="textarea"
+          v-model="newCommentText"
+          class="w-full p-2 border border-[#E9D386] rounded mb-2 text-sm focus:outline-none focus:border-[#D4C070] focus:ring-1 focus:ring-[#D4C070] focus:shadow-[0_0_0_2px_rgba(233,211,134,0.2)] transition-all"
+          placeholder="Write a comment..."
+          rows="2"
+        ></textarea>
+        <div class="flex justify-end">
+          <button 
+            @click="handleAddComment" 
+            class="bg-[#E9D386] text-black px-4 py-1 rounded text-sm hover:bg-[#D4C070] disabled:opacity-50 transition-colors"
+            :disabled="!newCommentText.trim() || postStore.loading"
+          >
+            {{ postStore.loading ? 'Posting...' : 'Post' }}
+          </button>
+        </div>
+      </template>
 
       <!-- 🔁 Loop through comments -->
       <div v-if="comments.length" class="mt-4 space-y-4">
@@ -186,6 +207,7 @@
 <script setup>
 import { ref, computed, toRef, nextTick } from 'vue'
 import { usePostStore } from '~/stores/posts'
+import { useMainStore } from '~/stores/main'
 import { getShopifyUser } from '~/utils/shopify'
 import ConfirmationModal from '~/components/ConfirmationModal.vue'
 import ImageViewer from '~/components/ImageViewer.vue'
@@ -197,6 +219,7 @@ const props = defineProps({
 })
 
 const postStore = usePostStore()
+const mainStore = useMainStore()
 const currentUser = getShopifyUser()
 
 /* 🧠 Reactive State */
@@ -229,18 +252,28 @@ const deleteModalMessage = computed(() => {
 const comments = computed(() => post.value?.commentsList ?? [])
 
 /* 🔐 Auth Checks */
+const isAuthenticated = computed(() => {
+    return mainStore.isAuthenticated
+})
+
 const canDeletePost = computed(() => {
-    if (!currentUser) return false
+    if (!isAuthenticated.value) return false
+    // Use mainStore.user.id if available, otherwise fallback to currentUser
+    const userId = mainStore.user?.id || currentUser?.id
+    const username = mainStore.user?.username || currentUser?.username
     // Check ID match (preferred) or username match (legacy)
-    return post.value.userId === currentUser.id || post.value.user === currentUser.username
+    return post.value.userId === userId || post.value.user === username
 })
 
 function canDeleteComment(comment) {
-    if (!currentUser) return false
+    if (!isAuthenticated.value) return false
+    // Use mainStore.user.id if available, otherwise fallback to currentUser
+    const userId = mainStore.user?.id || currentUser?.id
+    const username = mainStore.user?.username || currentUser?.username
     // STRICT CHECK: Only allow deletion if userId matches exactly
     // Check both userId (preferred) and username (legacy fallback)
-    const userIdMatch = comment.userId && currentUser.id && String(comment.userId) === String(currentUser.id)
-    const usernameMatch = comment.user && currentUser.username && comment.user === currentUser.username
+    const userIdMatch = comment.userId && userId && String(comment.userId) === String(userId)
+    const usernameMatch = comment.user && username && comment.user === username
     return userIdMatch || usernameMatch
 }
 
@@ -309,9 +342,28 @@ function toggleComment() {
 }
 
 async function handleAddComment() {
+  if (!isAuthenticated.value) {
+    handleLogin()
+    return
+  }
   if (!newCommentText.value.trim()) return
-  await postStore.addComment(post.value.id, newCommentText.value)
-  newCommentText.value = ''
+  
+  try {
+    await postStore.addComment(post.value.id, newCommentText.value)
+    newCommentText.value = ''
+  } catch (error) {
+    // Error is already set in store, but we can show a more user-friendly message
+    if (error.message && error.message.includes('sign in')) {
+      // User needs to sign in - login prompt already shown
+      console.warn('Authentication required for commenting')
+    } else {
+      console.error('Failed to add comment:', error)
+    }
+  }
+}
+
+function handleLogin() {
+  mainStore.login()
 }
 
 function handleShare() {
