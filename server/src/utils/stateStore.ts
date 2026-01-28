@@ -1,7 +1,7 @@
 /**
  * In-memory state store for OAuth CSRF protection
  * 
- * In production, use Redis or a database for distributed systems
+ * Note: For production with multiple servers, use Redis or a database
  */
 
 interface StateData {
@@ -12,52 +12,35 @@ interface StateData {
 
 const stateStore = new Map<string, StateData>()
 
-const STATE_EXPIRY_MS = 10 * 60 * 1000 // 10 minutes
+// Cleanup expired states every 15 minutes
+setInterval(() => {
+  const now = Date.now()
+  const expiryTime = 10 * 60 * 1000 // 10 minutes
+
+  for (const [state, data] of stateStore.entries()) {
+    if (now - data.createdAt > expiryTime) {
+      stateStore.delete(state)
+    }
+  }
+}, 15 * 60 * 1000)
 
 /**
  * Store state data for OAuth flow
  */
 export function setState(state: string, data: StateData): void {
   stateStore.set(state, data)
-  cleanupExpiredStates()
 }
 
 /**
- * Get state data
+ * Get state data from store
  */
 export function getState(state: string): StateData | undefined {
-  const data = stateStore.get(state)
-  if (!data) {
-    return undefined
-  }
-
-  // Check expiry
-  if (Date.now() - data.createdAt > STATE_EXPIRY_MS) {
-    stateStore.delete(state)
-    return undefined
-  }
-
-  return data
+  return stateStore.get(state)
 }
 
 /**
- * Delete state after use
+ * Delete state from store (after use)
  */
 export function deleteState(state: string): void {
   stateStore.delete(state)
 }
-
-/**
- * Clean up expired states
- */
-function cleanupExpiredStates(): void {
-  const now = Date.now()
-  for (const [state, data] of stateStore.entries()) {
-    if (now - data.createdAt > STATE_EXPIRY_MS) {
-      stateStore.delete(state)
-    }
-  }
-}
-
-// Clean up expired states every 5 minutes
-setInterval(cleanupExpiredStates, 5 * 60 * 1000)

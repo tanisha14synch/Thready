@@ -1,14 +1,14 @@
 import fp from 'fastify-plugin'
 import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 
 export default fp(async (server) => {
-  const prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL
-      }
-    }
-  })
+  const connectionString = process.env.DATABASE_URL
+  if (!connectionString) {
+    throw new Error('DATABASE_URL environment variable is required')
+  }
+  const adapter = new PrismaPg({ connectionString })
+  const prisma = new PrismaClient({ adapter })
 
   server.decorate('prisma', prisma)
 

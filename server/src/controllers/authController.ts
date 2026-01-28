@@ -337,7 +337,9 @@ export class AuthController {
     reply: FastifyReply
   ) {
     // Redirect to Customer Account API flow
-    return this.initiateCustomerAccountOAuth(request, reply)
+    // Convert request type to match initiateCustomerAccountOAuth
+    const convertedRequest = request as FastifyRequest<{ Querystring: { returnTo?: string } }>
+    return this.initiateCustomerAccountOAuth(convertedRequest, reply)
   }
 
   /**
@@ -357,7 +359,7 @@ export class AuthController {
       const query = request.query
 
       if (query.error) {
-        request.log.error('Shopify OAuth error:', query.error)
+        request.log.error({ error: query.error }, 'Shopify OAuth error')
         return reply.code(400).send({
           error: 'OAuth authorization failed',
           details: query.error,
@@ -372,7 +374,8 @@ export class AuthController {
 
       // Legacy Admin API flow would continue here...
       // For now, redirect to Customer Account API flow
-      return this.initiateCustomerAccountOAuth(request, reply)
+      const convertedRequest = request as FastifyRequest<{ Querystring: { returnTo?: string } }>
+      return this.initiateCustomerAccountOAuth(convertedRequest, reply)
     } catch (error: any) {
       request.log.error('OAuth callback error:', error)
       return reply.code(500).send({

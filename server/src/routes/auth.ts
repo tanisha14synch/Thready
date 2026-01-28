@@ -16,13 +16,13 @@ export default async function authRoutes(server: FastifyInstance) {
 
     // GET /auth/shopify/login
     // Initiates Customer Account API OAuth flow - redirects to Shopify
-    server.get('/auth/shopify/login', async (request, reply) => {
+    server.get<{ Querystring: { returnTo?: string } }>('/auth/shopify/login', async (request, reply) => {
       return controller.initiateCustomerAccountOAuth(request, reply)
     })
 
     // GET /auth/shopify/callback
     // Handles Customer Account API OAuth callback from Shopify
-    server.get('/auth/shopify/callback', async (request, reply) => {
+    server.get<{ Querystring: { code?: string; state?: string; error?: string; error_description?: string } }>('/auth/shopify/callback', async (request, reply) => {
       return controller.handleCustomerAccountCallback(request, reply)
     })
 
@@ -49,12 +49,12 @@ export default async function authRoutes(server: FastifyInstance) {
     // ===========================================
 
     // OAuth 2.0: Initiate Shopify OAuth flow (legacy - redirects to Customer Account API)
-    server.get('/auth/shopify/authorize', async (request, reply) => {
+    server.get<{ Querystring: { shop?: string } }>('/auth/shopify/authorize', async (request, reply) => {
       return controller.initiateOAuth(request, reply)
     })
 
     // Legacy: Shopify customer login redirect (HMAC-based)
-    server.get('/auth/shopify', async (request, reply) => {
+    server.get<{ Querystring: Record<string, any> }>('/auth/shopify', async (request, reply) => {
       return controller.handleShopifyRedirect(request, reply)
     })
 
