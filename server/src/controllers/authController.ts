@@ -122,13 +122,14 @@ export class AuthController {
       // Generate avatar color
       const avatarColor = generateAvatarColor(shopifyCustomerId)
 
-      // Upsert user in database
+      // Upsert user in database (email/username required by schema)
+      const email = customer.email ?? `customer-${shopifyCustomerId}@placeholder.local`
       const user = await this.prisma.user.upsert({
         where: { shopifyCustomerId },
         update: {
           firstName: customer.firstName || null,
           lastName: customer.lastName || null,
-          email: customer.email,
+          email,
           username,
           avatarColor,
           communityId,
@@ -137,7 +138,7 @@ export class AuthController {
           shopifyCustomerId,
           firstName: customer.firstName || null,
           lastName: customer.lastName || null,
-          email: customer.email,
+          email,
           username,
           avatarColor,
           communityId,
@@ -145,10 +146,11 @@ export class AuthController {
       })
 
       // Create session JWT (for cookie)
-      const displayName = `${customer.firstName} ${customer.lastName}`.trim() || customer.email
+      const displayName =
+        `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim() || email || 'Guest'
       const sessionToken = signSessionJwt({
         customerId: customer.id,
-        email: customer.email,
+        email,
         firstName: customer.firstName,
         lastName: customer.lastName,
         displayName,
@@ -161,7 +163,7 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        domain: cookieDomain,
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
         path: '/',
         maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
       })
@@ -209,7 +211,7 @@ export class AuthController {
         // Clear invalid cookie
         const cookieDomain = extractRootDomain(process.env.COMMUNITY_URL || process.env.FRONTEND_URL || '')
         reply.clearCookie('community_session', {
-          domain: cookieDomain,
+          ...(cookieDomain ? { domain: cookieDomain } : {}),
           path: '/',
         })
 
@@ -233,7 +235,7 @@ export class AuthController {
       // Clear invalid cookie
       const cookieDomain = extractRootDomain(process.env.COMMUNITY_URL || process.env.FRONTEND_URL || '')
       reply.clearCookie('community_session', {
-        domain: cookieDomain,
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
         path: '/',
       })
 
@@ -257,7 +259,7 @@ export class AuthController {
     // Clear session cookie
     const cookieDomain = extractRootDomain(process.env.COMMUNITY_URL || process.env.FRONTEND_URL || '')
     reply.clearCookie('community_session', {
-      domain: cookieDomain,
+      ...(cookieDomain ? { domain: cookieDomain } : {}),
       path: '/',
     })
 
@@ -287,7 +289,7 @@ export class AuthController {
       if (!user) {
         const cookieDomain = extractRootDomain(process.env.COMMUNITY_URL || process.env.FRONTEND_URL || '')
         reply.clearCookie('community_session', {
-          domain: cookieDomain,
+          ...(cookieDomain ? { domain: cookieDomain } : {}),
           path: '/',
         })
         return reply.code(401).send({ error: 'Invalid session' })
@@ -308,7 +310,7 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        domain: cookieDomain,
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
         path: '/',
         maxAge: 7 * 24 * 60 * 60,
       })
@@ -317,7 +319,7 @@ export class AuthController {
     } catch (err: any) {
       const cookieDomain = extractRootDomain(process.env.COMMUNITY_URL || process.env.FRONTEND_URL || '')
       reply.clearCookie('community_session', {
-        domain: cookieDomain,
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
         path: '/',
       })
 

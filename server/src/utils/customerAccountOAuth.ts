@@ -1,182 +1,183 @@
+/**
+ * Shopify Customer Account API OAuth 2.0 utilities.
+ * Shop: The Bar Wardrobe — https://thebarwardrobe.com
+ */
+
 import crypto from 'crypto'
 
-const SHOPIFY_CLIENT_ID = process.env.SHOPIFY_CLIENT_ID || ''
-const SHOPIFY_SHOP_ID = process.env.SHOPIFY_SHOP_ID || ''
-const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET || ''
+const SHOPIFY_SHOP_DOMAIN = process.env.SHOPIFY_SHOP_DOMAIN || 'thebarwardrobe.myshopify.com'
+const SHOPIFY_STORE_URL = process.env.SHOPIFY_STORE_URL || `https://${SHOPIFY_SHOP_DOMAIN}`
+const CALLBACK_URL = process.env.CALLBACK_URL || process.env.SHOPIFY_REDIRECT_URI || ''
 
-// Determine callback URL based on environment
-function getCallbackUrl(): string {
-  // First check explicit environment variables
-  if (process.env.CALLBACK_URL) return process.env.CALLBACK_URL
-  if (process.env.SHOPIFY_REDIRECT_URI) return process.env.SHOPIFY_REDIRECT_URI
-  
-  // Check if running on Vercel
-  if (process.env.VERCEL || process.env.VERCEL_URL) {
-    const vercelUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : (process.env.FRONTEND_URL || process.env.COMMUNITY_URL || 'https://thready-ruby.vercel.app')
-    return `${vercelUrl}/auth/shopify/callback`
-  }
-  
-  // Check if we have frontend URL set (production)
-  if (process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost')) {
-    return `${process.env.FRONTEND_URL}/auth/shopify/callback`
-  }
-  
-  // Default to localhost for local development
-  return 'http://localhost:3001/auth/shopify/callback'
-}
-
-const CALLBACK_URL = getCallbackUrl()
-
-/**
- * Generate state and nonce for CSRF protection
- */
 export function generateStateAndNonce(): { state: string; nonce: string } {
-  const state = crypto.randomBytes(32).toString('hex')
-  const nonce = crypto.randomBytes(32).toString('hex')
-  return { state, nonce }
+  return {
+    state: crypto.randomBytes(16).toString('hex'),
+    nonce: crypto.randomBytes(16).toString('hex'),
+  }
 }
 
-/**
- * Build Customer Account API authorization URL
- */
 export function buildCustomerAccountAuthUrl(state: string, nonce: string): string {
+  const clientId = process.env.SHOPIFY_CLIENT_ID
+  const redirectUri = CALLBACK_URL
+
+  if (!clientId || !redirectUri) {
+    throw new Error('SHOPIFY_CLIENT_ID and CALLBACK_URL (or SHOPIFY_REDIRECT_URI) must be set')
+  }
+
   const params = new URLSearchParams({
-    client_id: SHOPIFY_CLIENT_ID,
-    scope: 'openid email https://api.shopify.com/auth/customer.graphql',
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    scope: 'openid email https://api.shopify.com/auth/customer-account-api:full',
     response_type: 'code',
-    redirect_uri: CALLBACK_URL,
     state,
     nonce,
-    'grant_options[]': 'per-user',
   })
 
-  return `https://shopify.com/${SHOPIFY_SHOP_ID}/account/authorize?${params.toString()}`
+  const authorizeHost = SHOPIFY_STORE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  return `https://${authorizeHost}/authentication/oauth/authorize?${params.toString()}`
 }
 
-/**
- * Exchange authorization code for access token
- */
 export async function exchangeCustomerAccountCodeForToken(code: string): Promise<{
   access_token: string
-  token_type: string
-  expires_in: number
-  scope: string
-  id_token?: string
+  token_type?: string
+  expires_in?: number
+  refresh_token?: string
 }> {
+  const clientId = process.env.SHOPIFY_CLIENT_ID
+  const clientSecret = process.env.SHOPIFY_API_SECRET
+  const redirectUri = CALLBACK_URL
+
+  if (!clientId || !clientSecret || !redirectUri) {
+    throw new Error('SHOPIFY_CLIENT_ID, SHOPIFY_API_SECRET, and CALLBACK_URL must be set')
+  }
+
   const response = await fetch('https://shopify.com/authentication/oauth/token', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_id: SHOPIFY_CLIENT_ID,
-      client_secret: SHOPIFY_API_SECRET,
-      code,
       grant_type: 'authorization_code',
-      redirect_uri: CALLBACK_URL,
-    }),
+      client_id: clientId,
+      client_secret: clientSecret,
+      code,
+      redirect_uri: redirectUri,
+    }).toString(),
   })
 
   if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Token exchange failed: ${response.status} ${errorText}`)
+    const text = await response.text()
+    throw new Error(`Token exchange failed: ${text}`)
   }
 
-  return response.json()
+  return response.json() as Promise<{
+    access_token: string
+    token_type?: string
+    expires_in?: number
+    refresh_token?: string
+  }>
 }
 
-/**
- * Fetch customer profile from Customer Account API
- */
-export async function fetchCustomerAccountProfile(accessToken: string): Promise<any> {
+export interface CustomerAccountProfile {
+  id: string
+  email?: string
+  firstName?: string
+  lastName?: string
+  phone?: string
+  defaultAddress?: unknown
+  orders?: unknown[]
+  metafields?: Array<{ namespace: string; key: string; value: string; type?: string }>
+}
+
+export async function fetchCustomerAccountProfile(
+  accessToken: string
+): Promise<CustomerAccountProfile> {
+  const shopDomain = SHOPIFY_SHOP_DOMAIN
   const query = `
     query {
       customer {
         id
+        emailAddress { emailAddress }
         firstName
         lastName
-        email
-        displayName
-        metafields(first: 10) {
-          edges {
-            node {
-              namespace
-              key
-              value
-            }
+        phoneNumber { phoneNumber }
+        defaultAddress {
+          address1 address2 city province provinceCode country countryCode zip
+        }
+        orders(first: 10) {
+          nodes {
+            id name totalPrice { amount currencyCode } processedAt fulfillmentStatus
           }
+        }
+        metafields(first: 10) {
+          nodes { key namespace value type }
         }
       }
     }
   `
 
-  const response = await fetch(`https://shopify.com/${SHOPIFY_SHOP_ID}/account/customer/api/unstable/graphql`, {
+  const url = `https://shopify.com/${shopDomain}/account/customer/api/2024-01/graphql`
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({ query }),
   })
 
   if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Customer Account API error: ${response.status} ${errorText}`)
+    const text = await response.text()
+    throw new Error(`Customer Account API error: ${text}`)
   }
 
-  const data = await response.json()
-  
-  if (data.errors) {
-    throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`)
+  const result = (await response.json()) as {
+    data?: { customer?: Record<string, unknown> }
+    errors?: Array<{ message: string }>
   }
 
-  const customer = data.data?.customer
+  if (result.errors?.length) {
+    throw new Error(`GraphQL errors: ${JSON.stringify(result.errors)}`)
+  }
+
+  const customer = result.data?.customer
   if (!customer) {
-    throw new Error('Customer not found in response')
+    throw new Error('No customer data in response')
   }
 
-  // Transform metafields array
-  const metafields = customer.metafields?.edges?.map((edge: any) => edge.node) || []
+  const c = customer as {
+    id: string
+    emailAddress?: { emailAddress?: string }
+    firstName?: string
+    lastName?: string
+    phoneNumber?: { phoneNumber?: string }
+    defaultAddress?: unknown
+    orders?: { nodes?: unknown[] }
+    metafields?: {
+      nodes?: Array<{ namespace: string; key: string; value: string; type?: string }>
+    }
+  }
 
   return {
-    id: customer.id,
-    firstName: customer.firstName,
-    lastName: customer.lastName,
-    email: customer.email,
-    displayName: customer.displayName,
-    metafields,
+    id: c.id,
+    email: c.emailAddress?.emailAddress,
+    firstName: c.firstName ?? undefined,
+    lastName: c.lastName ?? undefined,
+    phone: c.phoneNumber?.phoneNumber,
+    defaultAddress: c.defaultAddress,
+    orders: c.orders?.nodes,
+    metafields: c.metafields?.nodes,
   }
 }
 
-/**
- * Extract root domain from URL for cookie domain
- * Example: https://app.example.com -> example.com
- */
-export function extractRootDomain(url: string): string {
-  if (!url) return ''
-  
+export function extractRootDomain(url: string): string | undefined {
+  if (!url || !url.startsWith('http')) return undefined
   try {
-    const urlObj = new URL(url)
-    const hostname = urlObj.hostname
-    
-    // Remove 'www.' prefix if present
-    const domain = hostname.replace(/^www\./, '')
-    
-    // For localhost, return empty string (cookies work without domain)
-    if (domain === 'localhost' || domain === '127.0.0.1') {
-      return ''
-    }
-    
-    // Extract root domain (e.g., example.com from app.example.com)
-    const parts = domain.split('.')
+    const hostname = new URL(url).hostname
+    const parts = hostname.split('.')
     if (parts.length >= 2) {
-      return `.${parts.slice(-2).join('.')}`
+      return '.' + parts.slice(-2).join('.')
     }
-    
-    return domain
+    return hostname
   } catch {
-    return ''
+    return undefined
   }
 }
