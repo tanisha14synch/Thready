@@ -3,7 +3,31 @@ import crypto from 'crypto'
 const SHOPIFY_CLIENT_ID = process.env.SHOPIFY_CLIENT_ID || ''
 const SHOPIFY_SHOP_ID = process.env.SHOPIFY_SHOP_ID || ''
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET || ''
-const CALLBACK_URL = process.env.CALLBACK_URL || process.env.SHOPIFY_REDIRECT_URI || 'http://localhost:3001/auth/shopify/callback'
+
+// Determine callback URL based on environment
+function getCallbackUrl(): string {
+  // First check explicit environment variables
+  if (process.env.CALLBACK_URL) return process.env.CALLBACK_URL
+  if (process.env.SHOPIFY_REDIRECT_URI) return process.env.SHOPIFY_REDIRECT_URI
+  
+  // Check if running on Vercel
+  if (process.env.VERCEL || process.env.VERCEL_URL) {
+    const vercelUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : (process.env.FRONTEND_URL || process.env.COMMUNITY_URL || 'https://thready-ruby.vercel.app')
+    return `${vercelUrl}/auth/shopify/callback`
+  }
+  
+  // Check if we have frontend URL set (production)
+  if (process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost')) {
+    return `${process.env.FRONTEND_URL}/auth/shopify/callback`
+  }
+  
+  // Default to localhost for local development
+  return 'http://localhost:3001/auth/shopify/callback'
+}
+
+const CALLBACK_URL = getCallbackUrl()
 
 /**
  * Generate state and nonce for CSRF protection
