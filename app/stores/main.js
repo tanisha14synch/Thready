@@ -44,8 +44,14 @@ export const useMainStore = defineStore('main', {
       return this.joinedCommunities.includes(communityId)
     },
     setAuthSession({ user, token, communityId }) {
-      if (user) this.user = user
-      if (token) this.authToken = token
+      if (user !== undefined) this.user = user
+      if (token !== undefined) {
+        this.authToken = token
+        if (import.meta.client && typeof localStorage !== 'undefined') {
+          if (token) localStorage.setItem('auth_token', token)
+          else localStorage.removeItem('auth_token')
+        }
+      }
       if (communityId) this.joinCommunity(communityId)
     },
   },

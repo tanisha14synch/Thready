@@ -4,7 +4,7 @@ import { getShopifyHeaders, getShopifyUser } from '~/utils/shopify'
 import postsSeed from '../data/posts.json'
 
 export const usePostStore = defineStore('postStore', () => {
-  const API_URL = 'http://localhost:3000'
+  const API_URL = import.meta.env.VITE_API_BASE || import.meta.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001'
 
   // State
   const allPosts = ref([])

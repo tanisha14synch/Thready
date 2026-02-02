@@ -1,6 +1,6 @@
 <template>
   <div class="mt-4 border-t pt-4">
-    <h3 class="font-semibold text-gray-800 mb-3">Comments</h3>
+    <h3 class="font-semibold mb-3" style="color: var(--text-primary);">Comments</h3>
 
     <!-- New comment box -->
     <div class="flex items-start gap-3 mb-4">
@@ -9,11 +9,13 @@
         <textarea
           v-model="newComment"
           placeholder="Add a comment..."
-          class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+          style="border-color: var(--border-color); color: var(--text-primary); --tw-ring-color: var(--primary-color);"
         ></textarea>
         <button
           @click="addComment"
-          class="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+          class="mt-2 px-3 py-1 rounded text-sm hover:opacity-90"
+          style="background-color: var(--primary-color); color: #000;"
         >
           Comment
         </button>
@@ -25,14 +27,15 @@
       <div
         v-for="(comment, index) in comments"
         :key="index"
-        class="bg-gray-50 border rounded-lg p-3"
+        class="border rounded-lg p-3"
+          style="background-color: var(--card-color); border-color: var(--border-color);"
       >
-        <p class="text-sm font-semibold text-gray-700">{{ comment.username }}</p>
-        <p class="text-sm text-gray-600">{{ comment.text }}</p>
+        <p class="text-sm font-semibold" style="color: var(--text-primary);">{{ comment.username }}</p>
+        <p class="text-sm" style="color: var(--text-secondary);">{{ comment.text }}</p>
       </div>
     </div>
 
-    <p v-else class="text-gray-500 text-sm">No comments yet. Be the first to comment!</p>
+    <p v-else class="text-sm" style="color: var(--text-secondary);">No comments yet. Be the first to comment!</p>
   </div>
 </template>
 

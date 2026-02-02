@@ -2,9 +2,9 @@
   <div class="px-4 pb-8 w-full lg:w-[57.5vw]" >
     <!-- HOME Section -->
     <div v-if="store.selectedSection === 'home'">
-      <div v-if="loading" class="py-8 text-center text-gray-500">Loading posts...</div>
+      <div v-if="loading" class="py-8 text-center" style="color: var(--text-secondary);">Loading posts...</div>
       <div v-else>
-        <div v-if="allPosts.length === 0" class="py-8 text-center text-gray-500">No posts yet.</div>
+        <div v-if="allPosts.length === 0" class="py-8 text-center" style="color: var(--text-secondary);">No posts yet.</div>
         <div v-else class="space-y-4">
           <PostCard v-for="post in allPosts" :key="post.id" :post="post" cardWidth=" h-auto" />
         </div>
@@ -13,9 +13,9 @@
 
     <!-- POPULAR Section -->
     <div v-if="store.selectedSection === 'popular'">
-      <div v-if="loading" class="py-8 text-center text-gray-500">Loading posts...</div>
+      <div v-if="loading" class="py-8 text-center" style="color: var(--text-secondary);">Loading posts...</div>
       <div v-else>
-        <div v-if="popularPosts.length === 0" class="py-8 text-center text-gray-500">No popular posts yet.</div>
+        <div v-if="popularPosts.length === 0" class="py-8 text-center" style="color: var(--text-secondary);">No popular posts yet.</div>
         <div v-else class="space-y-4">
           <PostCard v-for="post in popularPosts" :key="post.id" :post="post" cardWidth=" h-auto" />
         </div>

@@ -1,40 +1,42 @@
 import { useMainStore } from '~/stores/main'
 
-export default defineNuxtPlugin(async () => {
-  if (import.meta.server) return // Only run on client
-  
-  const mainStore = useMainStore()
-  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+const AUTH_TOKEN_KEY = 'auth_token'
 
-  // Skip if already have a token
-  if (mainStore.authToken) return
+export default defineNuxtPlugin(async () => {
+  if (import.meta.server) return
+
+  const mainStore = useMainStore() as ReturnType<typeof useMainStore> & {
+    setAuthSession: (opts: { user?: any; token?: string | null; communityId?: string }) => void
+  }
+  const config = useRuntimeConfig()
+  const apiBase = () => config.public.apiBase || 'http://localhost:3001'
+
+  // Hydrate token from localStorage (in case Pinia persist hasn't loaded yet)
+  if (typeof localStorage !== 'undefined') {
+    const stored = localStorage.getItem(AUTH_TOKEN_KEY)
+    if (stored && !mainStore.authToken) {
+      mainStore.setAuthSession({ token: stored })
+    }
+  }
+
+  const token = mainStore.authToken
+  if (!token) return
 
   try {
-    const res = await $fetch<{
-      jwt?: string
-      user?: any
-      communityId?: string
-    }>(`${apiBase}/auth/shopify-user`, {
+    const res = await $fetch<{ user?: { id: string; shop: string; username: string } }>(`${apiBase()}/auth/me`, {
       method: 'GET',
       headers: {
-        // Expect frontend to set the Shopify customer token in localStorage or elsewhere
-        'x-shopify-customer-token': typeof localStorage !== 'undefined' ? localStorage.getItem('shopify_customer_token') || '' : '',
+        Authorization: `Bearer ${token}`,
       },
     })
-
-    if (res && res.jwt) {
-      // @ts-ignore - setAuthSession exists in the store
-      mainStore.setAuthSession({
-        user: res.user,
-        token: res.jwt,
-        communityId: res.communityId,
-      })
+    if (res?.user) {
+      mainStore.setAuthSession({ user: res.user, token })
     }
-  } catch (err) {
-    // Ignore if not logged in on Shopify; app can still run
-    console.warn('Shopify auth skipped', err)
+  } catch {
+    // Token invalid or expired; clear
+    mainStore.setAuthSession({ user: null, token: null })
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(AUTH_TOKEN_KEY)
+    }
   }
 })
-
-
-

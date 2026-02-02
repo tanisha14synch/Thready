@@ -1,53 +1,59 @@
 <template>
-  <header class="w-full bg-white border-b border-gray-200 sticky top-0 z-50">
+  <header class="w-full fixed top-0 left-0 right-0 z-50" style="background-color: var(--secondary-color); border-bottom: 1px solid var(--border-color);">
     <div class="max-w-full mx-auto px-4 flex items-center justify-between h-12">
       <!-- Left: Logo & Search -->
       <div class="flex items-center gap-4 flex-1">
         <button class="md:hidden" @click="toggleSidebar">
-          <Menu class="w-6 h-6 text-gray-600" />
+          <Menu class="w-6 h-6" style="color: var(--text-primary);" />
         </button>
         <NuxtLink to="/" class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-            <span class="text-white font-bold text-xs">TBW</span>
+          <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background-color: var(--primary-color);">
+            <span class="font-bold text-xs" style="color: #000;">TBW</span>
           </div>
-          <h1 class="font-bold text-xl text-gray-900 hidden sm:block">thebarwardrobe</h1>
+          <h1 class="font-bold text-xl hidden sm:block" style="color: var(--text-primary);">thebarwardrobe</h1>
         </NuxtLink>
         <div ref="searchContainer" class="hidden md:flex flex-1 max-w-xl relative">
           <input
             v-model="searchQuery"
             type="text"
             placeholder="Search thebarwardrobe"
-            class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-blue-500"
+            class="w-full px-4 py-2 rounded-full text-sm focus:outline-none"
+            style="background-color: #f5f5f5; border: 1px solid var(--border-color);"
+            @focus="(e) => { e.target.style.borderColor = 'var(--primary-color)'; handleSearchFocus() }"
+            @blur="(e) => { e.target.style.borderColor = 'var(--border-color)' }"
             @input="handleSearch"
             @keyup.enter="handleSearchEnter"
-            @focus="handleSearchFocus"
           />
           <!-- Search Results Dropdown -->
           <div
             v-if="showSearchResults && searchQuery && filteredCommunities.length > 0"
-            class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50"
+            class="absolute top-full left-0 right-0 mt-2 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50"
+            style="background-color: var(--secondary-color); border: 1px solid var(--border-color);"
           >
             <div class="p-2">
-              <div class="text-xs font-semibold text-gray-500 uppercase px-2 py-1">Communities</div>
+              <div class="text-xs font-semibold uppercase px-2 py-1" style="color: var(--text-secondary);">Communities</div>
               <NuxtLink
                 v-for="community in filteredCommunities"
                 :key="community.id"
                 :to="`/community/${community.id}`"
-                class="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded-md"
+                class="flex items-center gap-3 px-3 py-2 rounded-md"
+            style="color: var(--text-primary);"
+            @mouseenter="(e) => e.currentTarget.style.backgroundColor = 'rgba(233, 211, 134, 0.2)'"
+            @mouseleave="(e) => e.currentTarget.style.backgroundColor = ''"
                 @click="closeSearch"
               >
-                <div class="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center flex-shrink-0">
+                <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0" style="background-color: rgba(233, 211, 134, 0.4);">
                   <img
                     v-if="community.icon"
                     :src="community.icon"
                     :alt="community.name"
                     class="w-full h-full object-cover"
                   />
-                  <span v-else class="text-gray-600 text-xs font-bold">r</span>
+                  <span v-else class="text-xs font-bold" style="color: var(--text-primary);">r</span>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-900">{{ community.name }}</p>
-                  <p v-if="community.description" class="text-xs text-gray-500 truncate">
+                  <p class="text-sm font-medium" style="color: var(--text-primary);">{{ community.name }}</p>
+                  <p v-if="community.description" class="text-xs truncate" style="color: var(--text-secondary);">
                     {{ community.description }}
                   </p>
                 </div>
@@ -56,7 +62,8 @@
           </div>
           <div
             v-else-if="showSearchResults && searchQuery && filteredCommunities.length === 0"
-            class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50 p-4 text-center text-gray-500 text-sm"
+            class="absolute top-full left-0 right-0 mt-2 rounded-lg shadow-lg z-50 p-4 text-center text-sm"
+            style="background-color: var(--secondary-color); border: 1px solid var(--border-color); color: var(--text-secondary);"
           >
             No communities found
           </div>
@@ -65,13 +72,25 @@
 
       <!-- Right: User Actions -->
       <div class="flex items-center gap-2">
+        <a
+          v-if="!mainStore.authToken"
+          :href="shopifyAuthUrl"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
+          style="background-color: var(--primary-color); color: #000;"
+        >
+          Log in with Shopify
+        </a>
         <NuxtLink
+          v-else
           to="/profile"
-          class="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 transition-colors"
+          class="flex items-center gap-2 px-2 py-1 rounded-full transition-colors"
+            style="--hover-bg: rgba(233, 211, 134, 0.2);"
+            @mouseenter="(e) => e.currentTarget.style.backgroundColor = 'rgba(233, 211, 134, 0.2)'"
+            @mouseleave="(e) => e.currentTarget.style.backgroundColor = ''"
         >
           <div
             class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium"
-            :style="`background-color: ${displayUser.avatarColor || '#FF4500'}`"
+            :style="`background-color: ${displayUser.avatarColor || '#E9D386'}`"
           >
             <img
               v-if="displayUser.profileImage || displayUser.avatar"
@@ -83,7 +102,7 @@
               {{ (displayUser.firstName?.[0] || displayUser.username?.[0] || 'U') + (displayUser.lastName?.[0] || '') }}
             </span>
           </div>
-          <span class="hidden md:block text-sm font-medium text-gray-700">
+          <span class="hidden md:block text-sm font-medium" style="color: var(--text-primary);">
             {{ displayUser.username || displayUser.firstName || 'User' }}
           </span>
         </NuxtLink>
@@ -101,6 +120,11 @@ import { getShopifyUser } from '~/utils/shopify'
 
 const mainStore = useMainStore()
 const communityStore = useCommunityStore()
+
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase || 'http://localhost:3001'
+const shop = config.public.shopifyShop || 'thebarwardrobe.myshopify.com'
+const shopifyAuthUrl = `${apiBase}/auth?shop=${encodeURIComponent(shop)}`
 
 // Ensure communities are loaded when header mounts
 onMounted(async () => {
@@ -121,7 +145,7 @@ const defaultUser = {
   firstName: 'User',
   lastName: '',
   username: 'user',
-  avatarColor: '#FF4500',
+  avatarColor: '#E9D386',
 }
 
 const shopifyUser = computed(() => {

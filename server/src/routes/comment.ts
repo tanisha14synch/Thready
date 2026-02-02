@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { getUser } from '../utils/auth.js'
+import { getUserId } from '../utils/auth.js'
 
 interface UpdateCommentBody {
   text: string
@@ -30,7 +30,7 @@ export default async function commentRoutes(server: FastifyInstance) {
   // Delete a comment
   server.delete<{ Params: { id: string } }>('/comments/:id', async (request, reply) => {
     const { id } = request.params
-    const userId = getUser(request) // Validate auth
+    const userId = await getUserId(request)
 
     try {
       const comment = await server.prisma.comment.findUnique({ where: { id } })
@@ -54,7 +54,7 @@ export default async function commentRoutes(server: FastifyInstance) {
   server.post<{ Params: { id: string }, Body: VoteBody }>('/comments/:id/vote', async (request, reply) => {
     const { id } = request.params
     const { value } = request.body
-    const userId = getUser(request) // Validate auth
+    const userId = await getUserId(request)
 
     if (![1, -1].includes(value)) {
         return reply.code(400).send({ error: 'Invalid vote value' })

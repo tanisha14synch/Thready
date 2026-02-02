@@ -2,16 +2,24 @@
 @import "@fortawesome/fontawesome-free/css/all.css";
 
 :root {
-    /* Theme Configuration */
-    --theme-color: #13544E;
-    --primary-color: #13544E;
+    /* Theme: E9D386 (gold) + white + black */
+    --theme-color: #E9D386;
+    --primary-color: #E9D386;
     --secondary-color: #ffffff;
-    --button-color: #13544E;
-    --text-color: #614e4e;
+    --button-color: #E9D386;
+    --text-color: #000000;
+    --bg-color: #ffffff;
     --primary-font: 'Libre-Baskerville';
     --secondary-font: 'Almarai';
-    --green-color: #184E50;
+    --green-color: #E9D386;
     --color-primary: var(--primary-color);
+    /* Page/component variables */
+    --background-color: #ffffff;
+    --card-color: #ffffff;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --border-color: #E9D386;
+    --divider-color: #E9D386;
     --font-xs: 	0.75rem;
     --font-sm: 0.87rem;
     --font-base: 1.0rem;
@@ -28,7 +36,7 @@
     -ms-touch-action: manipulation;
 }
 .vel__container {
-  background-color: #000 !important;
+  background-color: var(--bg-color) !important;
 }
 
 /* Theme utility classes */

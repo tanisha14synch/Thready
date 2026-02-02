@@ -3,11 +3,11 @@
     <div class="flex flex-col md:flex-row gap-6">
       <!-- Main Content -->
       <div class="w-full md:w-2/3">
-        <div class="bg-white  rounded-md p-4 mb-4 shadow-sm">
-          <h1 class="text-2xl font-bold mb-4">Create post</h1>
+        <div class="rounded-md p-4 mb-4 shadow-sm" style="background-color: var(--card-color);">
+          <h1 class="text-2xl font-bold mb-4" style="color: var(--text-primary);">Create post</h1>
           
           <!-- Selected Community Header (Fixed) -->
-          <div v-if="selectedCommunity" class="flex items-center gap-2 p-2 bg-gray-100 rounded-full mb-2">
+          <div v-if="selectedCommunity" class="flex items-center gap-2 p-2 rounded-full mb-2" style="background-color: rgba(233, 211, 134, 0.3); color: var(--text-primary);">
             <div class="w-8 h-8 rounded-full overflow-hidden">
               <img 
                 :src="selectedCommunity.icon || '/images/communities/default-header.jpg'" 
@@ -17,10 +17,10 @@
             </div>
             <span class="font-medium">r/{{ selectedCommunity.name }}</span>
           </div>
-          <div v-else class="p-4 bg-red-100 text-red-700 rounded-md mb-4">
+          <div v-else class="p-4 rounded-md mb-4" style="background-color: rgba(233, 211, 134, 0.4); color: #000; border: 1px solid var(--border-color);">
              Please select a community from the home page or a community page to create a post.
           </div>
-          <div v-if="selectedCommunity && !isJoined" class="p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md mb-4">
+          <div v-if="selectedCommunity && !isJoined" class="p-3 rounded-md mb-4" style="background-color: rgba(233, 211, 134, 0.3); border: 1px solid var(--border-color); color: var(--text-primary);">
             Join this community to create a post.
           </div>
           
@@ -44,7 +44,10 @@
             <!-- Image Upload (optional) -->
             <div class="rounded-md pt-4">
               <div 
-                class="border-2 border-dashed p-6 rounded-md hover:bg-gray-50 transition-colors cursor-pointer text-center"
+                class="border-2 border-dashed p-6 rounded-md transition-colors cursor-pointer text-center"
+                style="border-color: var(--border-color);"
+                @mouseenter="(e) => e.currentTarget.style.backgroundColor = 'rgba(233, 211, 134, 0.15)'"
+                @mouseleave="(e) => e.currentTarget.style.backgroundColor = ''"
                 @click="triggerFileInput"
                 @dragover.prevent
                 @drop.prevent="handleDrop"
@@ -57,14 +60,15 @@
                   @change="handleFileChange"
                 />
                 <p class="mb-2 font-medium">Add an image (optional)</p>
-                <p class="text-sm text-gray-500">Click or drag & drop</p>
+                <p class="text-sm" style="color: var(--text-secondary);">Click or drag & drop</p>
               </div>
 
               <div v-if="postImage" class="mt-3 relative border rounded-md p-2">
                 <img :src="postImage" class="max-h-[260px] mx-auto object-contain rounded" />
                 <button 
                   @click="removeImage"
-                  class="absolute top-2 right-2 bg-gray-800 bg-opacity-70 text-white rounded-full p-1 hover:bg-opacity-100"
+                  class="absolute top-2 right-2 rounded-full p-1 hover:opacity-100"
+            style="background-color: rgba(0,0,0,0.7); color: #fff;"
                   aria-label="Remove image"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -79,7 +83,8 @@
           <div class="flex justify-end gap-2">
             <button class="px-4 py-2 border  rounded-full">Save Draft</button>
             <button 
-              class="px-4 py-2 bg-yellow-400 text-white rounded-full flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-4 py-2 rounded-full flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            style="background-color: var(--primary-color); color: #000;"
               :disabled="!canSubmitPost || isSubmitting"
               @click="submitPost"
             >
@@ -94,40 +99,40 @@
       <!-- Sidebar -->
       <div class="w-full md:w-1/3">
         <!-- Community Card -->
-        <div v-if="selectedCommunity" class="bg-white rounded-md overflow-hidden shadow-sm mb-4">
+        <div v-if="selectedCommunity" class="rounded-md overflow-hidden shadow-sm mb-4" style="background-color: var(--card-color); border: 1px solid var(--border-color);">
           <div class="h-20 bg-cover bg-center" :style="`background-image: url(${selectedCommunity.headerImage || '/images/communities/default-header.jpg'})`"></div>
           <div class="p-4">
             <div class="flex items-center gap-3 mb-3">
-              <div class="w-12 h-12 rounded-full overflow-hidden border-4 border-white -mt-8">
+              <div class="w-12 h-12 rounded-full overflow-hidden border-4 -mt-8" style="border-color: var(--secondary-color);">
                 <img 
                   :src="selectedCommunity.icon || '/images/communities/default-header.jpg'" 
                   :alt="selectedCommunity.name" 
                   class="w-full h-full object-cover"
                 />
               </div>
-              <h2 class="text-lg font-bold">r/{{ selectedCommunity.name }}</h2>
+              <h2 class="text-lg font-bold" style="color: var(--text-primary);">r/{{ selectedCommunity.name }}</h2>
             </div>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{ selectedCommunity.description }}</p>
-            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+            <p class="text-sm mb-3" style="color: var(--text-secondary);">{{ selectedCommunity.description }}</p>
+            <div class="flex items-center text-sm mb-2" style="color: var(--text-secondary);">
               <span class="mr-4">
-                <strong>{{ formatNumber(selectedCommunity.members) }}</strong> members
+                <strong style="color: var(--text-primary);">{{ formatNumber(selectedCommunity.members) }}</strong> members
               </span>
               <span>
-                <strong>{{ selectedCommunity.online }}</strong> online
+                <strong style="color: var(--text-primary);">{{ selectedCommunity.online }}</strong> online
               </span>
             </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
+            <div class="text-xs" style="color: var(--text-secondary);">
               Created {{ formatDate(selectedCommunity.createdDate) }}
             </div>
           </div>
           
           <!-- Community Rules -->
-          <div class="border-t dark:border-gray-700 p-4">
-            <h3 class="font-bold mb-2">r/{{ selectedCommunity.name }} Rules</h3>
-            <ol class="list-decimal list-inside text-sm">
-              <li class="py-2 border-b dark:border-gray-700 last:border-0">Be respectful to others</li>
-              <li class="py-2 border-b dark:border-gray-700 last:border-0">No spam or self-promotion</li>
-              <li class="py-2 border-b dark:border-gray-700 last:border-0">Use appropriate tags for content</li>
+          <div class="border-t p-4" style="border-color: var(--divider-color);">
+            <h3 class="font-bold mb-2" style="color: var(--text-primary);">r/{{ selectedCommunity.name }} Rules</h3>
+            <ol class="list-decimal list-inside text-sm" style="color: var(--text-primary);">
+              <li class="py-2 border-b last:border-0" style="border-color: var(--divider-color);">Be respectful to others</li>
+              <li class="py-2 border-b last:border-0" style="border-color: var(--divider-color);">No spam or self-promotion</li>
+              <li class="py-2 border-b last:border-0" style="border-color: var(--divider-color);">Use appropriate tags for content</li>
             </ol>
           </div>
         </div>

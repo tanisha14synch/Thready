@@ -9,18 +9,19 @@
 
     <aside
       :class="[
-        'w-64 bg-white min-h-screen border-r border-gray-200',
+        'w-64 min-h-screen border-r',
         'fixed top-12 left-0 z-50 transition-transform duration-300 overflow-y-auto',
         'md:relative md:top-0 md:translate-x-0 md:z-auto',
         mainStore.isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
+      style="background-color: var(--secondary-color); border-color: var(--border-color);"
     >
       <!-- User Info Section -->
-      <div class="p-4 border-b border-gray-200">
-        <NuxtLink to="/profile" class="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-md -mx-2">
+      <div class="p-4 border-b" style="border-color: var(--border-color); background-color: var(--secondary-color);">
+        <NuxtLink to="/profile" class="flex items-center gap-3 p-2 rounded-md -mx-2 hover:opacity-90" style="--tw-bg-opacity: 0.1;" @mouseenter="(e) => e.currentTarget.style.backgroundColor = 'rgba(233, 211, 134, 0.2)'" @mouseleave="(e) => e.currentTarget.style.backgroundColor = ''">
           <div
             class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium"
-            :style="`background-color: ${displayUser.avatarColor || '#FF4500'}`"
+            :style="`background-color: ${displayUser.avatarColor || '#E9D386'}`"
           >
             <img
               v-if="displayUser.profileImage"
@@ -33,10 +34,10 @@
             </span>
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 truncate">
+            <p class="text-sm font-medium truncate" style="color: var(--text-primary);">
               {{ displayUser.firstName }} {{ displayUser.lastName }}
             </p>
-            <p class="text-xs text-gray-500 truncate">u/{{ displayUser.username || 'user' }}</p>
+            <p class="text-xs truncate" style="color: var(--text-secondary);">u/{{ displayUser.username || 'user' }}</p>
           </div>
         </NuxtLink>
       </div>
@@ -48,20 +49,23 @@
           :key="item.name"
           @click="handleClick(item)"
           :class="[
-            'flex items-center gap-3 w-full text-left px-4 py-2.5 hover:bg-gray-100 transition-colors',
-            mainStore.selectedSection === item.name ? 'bg-gray-50 border-l-4 border-orange-500' : ''
+            'flex items-center gap-3 w-full text-left px-4 py-2.5 transition-colors',
+            mainStore.selectedSection === item.name ? 'border-l-4' : ''
           ]"
+          :style="mainStore.selectedSection === item.name ? { backgroundColor: 'rgba(233, 211, 134, 0.2)', borderLeftColor: 'var(--primary-color)' } : {}"
+          @mouseenter="(e) => { if (mainStore.selectedSection !== item.name) e.currentTarget.style.backgroundColor = 'rgba(233, 211, 134, 0.15)' }"
+          @mouseleave="(e) => { if (mainStore.selectedSection !== item.name) e.currentTarget.style.backgroundColor = '' }"
         >
-          <component :is="item.icon" class="w-5 h-5 text-gray-600" />
-          <span class="font-medium text-gray-900">{{ item.label }}</span>
+          <component :is="item.icon" class="w-5 h-5" style="color: var(--text-primary);" />
+          <span class="font-medium" style="color: var(--text-primary);">{{ item.label }}</span>
         </button>
       </nav>
 
     <!-- RECENT Section -->
     <div class="mt-4 px-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-xs font-medium uppercase tracking-wider text-gray-500">Recent</h3>
-        <button class="text-gray-500">
+        <h3 class="text-xs font-medium uppercase tracking-wider" style="color: var(--text-secondary);">Recent</h3>
+        <button style="color: var(--text-secondary);">
           <ChevronUp class="w-4 h-4" />
         </button>
       </div>
@@ -70,15 +74,18 @@
           v-for="community in recentCommunities" 
           :key="community.id"
           @click="goToCommunity(community.id)"
-          class="flex items-center gap-3 w-full text-left py-2 hover:bg-gray-100"
+          class="flex items-center gap-3 w-full text-left py-2"
+          style="color: var(--text-primary);"
+          @mouseenter="(e) => e.currentTarget.style.backgroundColor = 'rgba(233, 211, 134, 0.15)'"
+          @mouseleave="(e) => e.currentTarget.style.backgroundColor = ''"
         >
-          <div class="w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center text-white text-xs overflow-hidden">
+          <div class="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs overflow-hidden" style="background-color: #000;">
             <img v-if="community.icon" :src="community.icon" alt="" class="w-full h-full object-cover" />
             <span v-else>r</span>
           </div>
-          <span class="text-sm text-gray-900">{{ community.name || community.id || 'Unnamed' }}</span>
+          <span class="text-sm" style="color: var(--text-primary);">{{ community.name || community.id || 'Unnamed' }}</span>
         </button>
-        <div v-if="recentCommunities.length === 0" class="text-xs text-gray-500 py-2">
+        <div v-if="recentCommunities.length === 0" class="text-xs py-2" style="color: var(--text-secondary);">
           No recent communities
         </div>
       </div>
@@ -87,8 +94,8 @@
     <!-- COMMUNITIES Section -->
     <div class="mt-4 px-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-xs font-medium uppercase tracking-wider text-gray-500">Communities</h3>
-        <button class="text-gray-500">
+        <h3 class="text-xs font-medium uppercase tracking-wider" style="color: var(--text-secondary);">Communities</h3>
+        <button style="color: var(--text-secondary);">
           <ChevronUp class="w-4 h-4" />
         </button>
       </div>
@@ -97,16 +104,19 @@
           v-for="community in allCommunities" 
           :key="community.id"
           @click="goToCommunity(community.id)"
-          class="flex items-center gap-3 w-full text-left py-2 hover:bg-gray-100"
+          class="flex items-center gap-3 w-full text-left py-2"
+          style="color: var(--text-primary);"
+          @mouseenter="(e) => e.currentTarget.style.backgroundColor = 'rgba(233, 211, 134, 0.15)'"
+          @mouseleave="(e) => e.currentTarget.style.backgroundColor = ''"
         >
-          <div class="w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center text-white text-xs overflow-hidden">
+          <div class="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs overflow-hidden" style="background-color: #000;">
             <img v-if="community.icon" :src="community.icon" alt="" class="w-full h-full object-cover" />
             <span v-else>r</span>
           </div>
-          <span class="text-sm text-gray-900">{{ community.name || community.id || 'Unnamed Community' }}</span>
-          <Star v-if="community.favorite" class="w-4 h-4 ml-auto text-yellow-400" />
+          <span class="text-sm" style="color: var(--text-primary);">{{ community.name || community.id || 'Unnamed Community' }}</span>
+          <Star v-if="community.favorite" class="w-4 h-4 ml-auto" style="color: var(--primary-color);" />
         </button>
-        <div v-if="allCommunities.length === 0" class="text-xs text-gray-500 py-4 text-center">
+        <div v-if="allCommunities.length === 0" class="text-xs py-4 text-center" style="color: var(--text-secondary);">
           <div v-if="communityStore.loading">Loading communities...</div>
           <div v-else>No communities available</div>
         </div>
@@ -153,7 +163,7 @@ const defaultUser = {
   firstName: 'User',
   lastName: '',
   username: 'user',
-  avatarColor: '#FF4500',
+  avatarColor: '#E9D386',
 }
 
 const displayUser = computed(() => {

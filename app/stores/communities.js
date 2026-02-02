@@ -7,7 +7,7 @@ export const useCommunityStore = defineStore('communityStore', () => {
   const loading = ref(false)
   const error = ref(null)
   
-  const API_URL = 'http://localhost:3000'
+  const API_URL = import.meta.env.VITE_API_BASE || import.meta.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001'
 
   // Fetch communities from backend
   const fetchCommunities = async () => {

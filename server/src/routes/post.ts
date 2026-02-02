@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { getUser } from '../utils/auth.js'
+import { getUser, getUserId, getUsername } from '../utils/auth.js'
 
 interface PostBody {
   communityId: string
@@ -24,7 +24,7 @@ interface VoteBody {
 export default async function postRoutes(server: FastifyInstance) {
   server.get<{ Querystring: { community?: string } }>('/posts', async (request, reply) => {
     const { community } = request.query
-    const userId = request.headers['x-user-id'] as string | undefined
+    const userId = (await getUserId(request)) || (request.headers['x-user-id'] as string | undefined)
     
     const where = community ? { communityId: community } : {}
     
@@ -76,7 +76,8 @@ export default async function postRoutes(server: FastifyInstance) {
 
   server.post<{ Body: PostBody }>('/posts', async (request, reply) => {
     const { communityId, user, avatar, title, content, image, video } = request.body
-    const userId = getUser(request) // Get authenticated User ID
+    const userId = await getUserId(request)
+    const displayUser = user || (await getUsername(request))
     
     // Check if community exists
     const community = await server.prisma.community.findUnique({
@@ -91,8 +92,8 @@ export default async function postRoutes(server: FastifyInstance) {
       const post = await server.prisma.post.create({
         data: {
           communityId,
-          userId, // Store ID
-          user,   // Store display name
+          userId,
+          user: displayUser,
           avatar,
           title,
           content,
@@ -116,14 +117,15 @@ export default async function postRoutes(server: FastifyInstance) {
   server.post<{ Params: { id: string }, Body: CommentBody }>('/posts/:id/comments', async (request, reply) => {
     const { id } = request.params
     const { user, avatar, text } = request.body
-    const userId = getUser(request)
+    const userId = await getUserId(request)
+    const displayUser = user || (await getUsername(request))
     
     try {
       const comment = await server.prisma.comment.create({
         data: {
           postId: id,
           userId,
-          user,
+          user: displayUser,
           avatar,
           text
         }
@@ -139,7 +141,7 @@ export default async function postRoutes(server: FastifyInstance) {
   server.post<{ Params: { id: string }, Body: VoteBody }>('/posts/:id/vote', async (request, reply) => {
     const { id } = request.params
     const { value } = request.body
-    const userId = getUser(request) // Validate auth
+    const userId = await getUserId(request)
 
     if (![1, -1].includes(value)) {
         return reply.code(400).send({ error: 'Invalid vote value' })
@@ -237,7 +239,7 @@ export default async function postRoutes(server: FastifyInstance) {
   // Delete a post
   server.delete<{ Params: { id: string } }>('/posts/:id', async (request, reply) => {
     const { id } = request.params
-    const userId = getUser(request) // Validate auth
+    const userId = await getUserId(request)
 
     try {
       const post = await server.prisma.post.findUnique({ where: { id } })

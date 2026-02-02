@@ -1,12 +1,12 @@
 <template>
-  <section :class="[cardWidth, 'my-6 p-4 border rounded-xl border-gray-200 bg-gray-300']">
+  <section :class="[cardWidth, 'my-6 p-4 border rounded-xl']" style="border-color: var(--border-color); background-color: var(--card-color);">
     <!-- 🧍 User Info & Actions -->
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center gap-3">
         <NuxtImg :src="post.avatar || '/images/avatars/default-avatar.jpg'" class="w-8 h-8 rounded-full" />
         <div class="flex flex-col">
-          <p class="font-semibold text-xs">{{ post.user }}</p>
-          <p class="text-xs text-gray-500">Posted {{ post.postedAt }}</p>
+          <p class="font-semibold text-xs" style="color: var(--text-primary);">{{ post.user }}</p>
+          <p class="text-xs" style="color: var(--text-secondary);">Posted {{ post.postedAt }}</p>
         </div>
       </div>
       
@@ -15,7 +15,8 @@
         <button 
           v-if="canDeletePost" 
           @click="initiateDeletePost" 
-          class="text-gray-500 hover:text-red-600"
+          class="hover:opacity-80"
+            style="color: var(--text-secondary);"
           title="Delete Post"
         >
           <i class="fas fa-trash"></i>
@@ -25,8 +26,8 @@
 
     <!-- 📝 Post Title & Content -->
     <div>
-      <p class="text-base font-medium">{{ post.title }}</p>
-      <p v-if="post.content" class="text-sm mt-1 text-gray-800">{{ post.content }}</p>
+      <p class="text-base font-medium" style="color: var(--text-primary);">{{ post.title }}</p>
+      <p v-if="post.content" class="text-sm mt-1" style="color: var(--text-primary);">{{ post.content }}</p>
     </div>
 
     <!-- 🖼️ Post Media -->
@@ -48,16 +49,18 @@
     <div class="flex flex-wrap items-center justify-between mt-4">
       <div class="flex items-center gap-1">
         <!-- Upvote / Downvote -->
-        <div class="flex items-center mt-2 gap-0 justify-center border border-gray-400 rounded-full px-1">
+        <div class="flex items-center mt-2 gap-0 justify-center border rounded-full px-1" style="border-color: var(--border-color);">
           <button
-            :class="['p-2 rounded-full text-xs', userVote === 1 ? 'text-blue-600' : 'text-gray-700']"
+            :class="['p-2 rounded-full text-xs', userVote === 1 ? '' : '']"
+            :style="{ color: userVote === 1 ? 'var(--primary-color)' : 'var(--text-primary)' }"
             @click="handleUpvote"
           >
             <i class="fas fa-arrow-up"></i>
           </button>
-          <div class="text-sm font-medium text-gray-700">{{ displayedScore }}</div>
+          <div class="text-sm font-medium" style="color: var(--text-primary);">{{ displayedScore }}</div>
           <button
-            :class="['p-2 rounded-full text-xs', userVote === -1 ? 'text-red-600' : 'text-gray-700']"
+            :class="['p-2 rounded-full text-xs']"
+            :style="{ color: userVote === -1 ? 'var(--primary-color)' : 'var(--text-primary)' }"
             @click="handleDownvote"
           >
             <i class="fas fa-arrow-down"></i>
@@ -66,7 +69,8 @@
 
         <!-- Comment Button -->
         <button
-          class="ml-2 p-2 border rounded-full text-xs border-gray-400 mt-2"
+          class="ml-2 p-2 border rounded-full text-xs mt-2"
+          style="border-color: var(--border-color); color: var(--text-primary);"
           @click="toggleComment"
         >
           <i class="fas fa-comment"></i> Comment
@@ -75,19 +79,20 @@
         <!-- Share Button -->
         <button
           v-if="post.shareable"
-          class="ml-2 p-2 border rounded-full text-xs border-gray-400 mt-2"
+          class="ml-2 p-2 border rounded-full text-xs mt-2"
+          style="border-color: var(--border-color); color: var(--text-primary);"
           @click="handleShare"
         >
           <i class="fas fa-share"></i>
         </button>
 
         <!-- Share Status -->
-        <span class="text-xs text-gray-500 ml-2">{{ shareMessage }}</span>
+        <span class="text-xs ml-2" style="color: var(--text-secondary);">{{ shareMessage }}</span>
       </div>
     </div>
 
     <!-- 🗨️ Comments Section -->
-    <div v-if="showComment" class="mt-4 bg-gray-50 p-4 rounded-lg">
+    <div v-if="showComment" class="mt-4 p-4 rounded-lg" style="background-color: rgba(233, 211, 134, 0.15);">
       <textarea
         ref="textarea"
         v-model="newCommentText"
@@ -98,7 +103,8 @@
       <div class="flex justify-end">
         <button 
           @click="handleAddComment" 
-          class="bg-blue-600 text-white px-4 py-1 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+          class="px-4 py-1 rounded text-sm disabled:opacity-50"
+          style="background-color: var(--primary-color); color: #000;"
           :disabled="!newCommentText.trim() || postStore.loading"
         >
           {{ postStore.loading ? 'Posting...' : 'Post' }}
@@ -110,7 +116,8 @@
         <div
           v-for="comment in comments"
           :key="comment.id"
-          class="pb-3 border-b border-gray-100 last:border-0"
+          class="pb-3 border-b last:border-0"
+          style="border-color: var(--divider-color);"
         >
           <div class="flex items-start justify-between">
             <div class="flex items-start gap-3 w-full">
@@ -119,23 +126,26 @@
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="font-semibold text-xs">{{ comment.user }}</p>
-                        <p class="text-xs text-gray-500">Commented {{ formatDate(comment.commentedAt) }}</p>
+                        <p class="text-xs" style="color: var(--text-secondary);">Commented {{ formatDate(comment.commentedAt) }}</p>
                     </div>
                     
                      <!-- Comment Actions (Vote & Delete) -->
                     <div class="flex items-center gap-3">
                         <!-- Vote -->
-                        <div class="flex items-center gap-1 bg-white border border-gray-200 rounded-full px-2 py-0.5">
+                        <div class="flex items-center gap-1 rounded-full px-2 py-0.5"
+          style="background-color: var(--card-color); border: 1px solid var(--border-color);">
                             <button 
                                 @click="voteComment(comment.id, 1)" 
-                                :class="['text-xs hover:bg-gray-100 p-1 rounded', comment.userVote === 1 ? 'text-blue-600' : 'text-gray-500']"
+                                :class="['text-xs p-1 rounded']"
+                                :style="{ color: comment.userVote === 1 ? 'var(--primary-color)' : 'var(--text-secondary)' }"
                             >
                                 <i class="fas fa-arrow-up"></i>
                             </button>
                             <span class="text-xs font-medium min-w-[12px] text-center">{{ comment.displayedScore || 0 }}</span>
                             <button 
                                 @click="voteComment(comment.id, -1)" 
-                                :class="['text-xs hover:bg-gray-100 p-1 rounded', comment.userVote === -1 ? 'text-red-600' : 'text-gray-500']"
+                                :class="['text-xs p-1 rounded']"
+                                :style="{ color: comment.userVote === -1 ? 'var(--primary-color)' : 'var(--text-secondary)' }"
                             >
                                 <i class="fas fa-arrow-down"></i>
                             </button>
@@ -145,20 +155,21 @@
                         <button 
                             v-if="canDeleteComment(comment)" 
                             @click="initiateDeleteComment(comment.id)" 
-                            class="text-gray-400 hover:text-red-600 text-xs"
+                            class="text-xs"
+          style="color: var(--text-secondary);"
                             title="Delete Comment"
                         >
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </div>
-                <p class="text-sm mt-1 text-gray-700">{{ comment.text }}</p>
+                <p class="text-sm mt-1" style="color: var(--text-primary);">{{ comment.text }}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div v-else class="mt-4 text-center text-gray-500 text-sm">
+      <div v-else class="mt-4 text-center text-sm" style="color: var(--text-secondary);">
         No comments yet. Be the first to comment!
       </div>
     </div>

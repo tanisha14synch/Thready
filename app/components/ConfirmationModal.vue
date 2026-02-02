@@ -1,22 +1,24 @@
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100">
-        <h3 class="text-lg font-semibold text-gray-900">{{ title }}</h3>
+    <div class="rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden" style="background-color: var(--secondary-color);">
+      <div class="px-6 py-4 border-b" style="border-color: var(--border-color);">
+        <h3 class="text-lg font-semibold" style="color: var(--text-primary);">{{ title }}</h3>
       </div>
       <div class="px-6 py-4">
-        <p class="text-gray-600">{{ message }}</p>
+        <p style="color: var(--text-secondary);">{{ message }}</p>
       </div>
-      <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3">
+      <div class="px-6 py-4 flex justify-end gap-3" style="background-color: rgba(233, 211, 134, 0.15);">
         <button 
           @click="$emit('cancel')" 
-          class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          class="px-4 py-2 text-sm font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-offset-2"
+          style="color: var(--text-primary); background-color: var(--secondary-color); border-color: var(--border-color); --tw-ring-color: var(--primary-color);"
         >
           Cancel
         </button>
         <button 
           @click="$emit('confirm')" 
-          class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          class="px-4 py-2 text-sm font-medium rounded-md border border-transparent focus:outline-none focus:ring-2 focus:ring-offset-2"
+          style="color: #fff; background-color: #000; --tw-ring-color: var(--primary-color);"
         >
           Confirm
         </button>

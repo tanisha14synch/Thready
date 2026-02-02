@@ -1,9 +1,13 @@
 <template>
-  <div class="bg-white min-h-screen" style="color: var(--text-primary); background-color: var(--background-color);">
-    <!-- Community Header -->
-    <div class="relative">
+  <!-- Fills main area; left & right columns scroll independently (no shared page scroll) -->
+  <div
+    class="bg-white flex flex-col overflow-hidden h-full min-h-0"
+    style="color: var(--text-primary); background-color: var(--background-color);"
+  >
+    <!-- Community Header (fixed, no scroll) -->
+    <div class="relative flex-shrink-0">
       <!-- Banner Image -->
-      <div class="h-[30vh] w-full overflow-hidden rounded-2xl bg-gray-800">
+      <div class="h-[30vh] w-full overflow-hidden rounded-2xl" style="background-color: #000;">
         <NuxtImg v-if="community?.headerImage" :src="community.headerImage" alt="Community header"
           class="w-full h-full object-cover" onerror="this.style.display='none'" />
       </div>
@@ -15,7 +19,7 @@
           <div class="w-25 h-25 -mt-5 md:w-20  md:h-20 rounded-full bg-white p-1 mr-4 overflow-hidden">
             <NuxtImg v-if="community?.icon" :src="community.icon" alt="icon"
               class="w-full h-full rounded-full object-cover" />
-            <div v-else class="w-full h-full rounded-full bg-gray-800 flex items-center justify-center text-white">
+            <div v-else class="w-full h-full rounded-full flex items-center justify-center text-white" style="background-color: #000;">
               <span class="text-2xl">r</span>
             </div>
           </div>
@@ -26,14 +30,15 @@
               {{ community?.name || '' }}
             </h1>
             <div class="flex flex-wrap gap-2 mt-2">
-              <span v-for="tag in community?.tags || []" :key="tag" class="text-xs px-2 py-1 bg-gray-200 rounded">{{ tag
+              <span v-for="tag in community?.tags || []" :key="tag" class="text-xs px-2 py-1 rounded" style="background-color: rgba(233, 211, 134, 0.4); color: var(--text-primary);">{{ tag
                 }}</span>
             </div>
           </div>
         </div>
         <div class="flex gap-2 items-center">
           <button
-            class="w-full rounded-full px-3 py-2 border border-gray-300 text-xs mt-2 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full rounded-full px-3 py-2 border text-xs mt-2 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+            style="border-color: var(--border-color); color: var(--text-primary);"
             :disabled="!isJoined" @click="handleCreatePost">
             <i class="fas fa-add"></i> Create Post
           </button>
@@ -41,19 +46,19 @@
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="max-w-full mx-auto px-4  flex flex-wrap flex-col md:flex-row">
-      <!-- Posts Column -->
-      <div class="flex-1 space-y-4 lg:min-w-[50%]">
+    <!-- Two columns: each scrolls independently -->
+    <div class="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 px-4 pb-4 overflow-hidden">
+      <!-- Left: Posts (own scroll) -->
+      <div class="flex-1 min-h-0 overflow-y-auto space-y-4 lg:min-w-[50%]">
         <PostCard v-for="post in posts" :key="post.id" :post="post" />
       </div>
 
-      <!-- Sidebar -->
-      <div class=" w-full lg:w-[30%] ml-0 lg:ml-6 flex-shrink-0 mt-0 sticky top-0 z-10 lg:mt-6">
+      <!-- Right: Sidebar (own scroll) -->
+      <div class="w-full lg:w-[30%] flex-shrink-0 min-h-0 overflow-y-auto lg:mt-2">
         <!-- About Community -->
         <div class="rounded-md overflow-hidden mb-4"
           style="border: 1px solid var(--border-color); background-color: var(--card-color);">
-          <div class="px-3 py-2 text-white font-medium" style="background-color: var(--primary-color);">
+          <div class="px-3 py-2 font-medium" style="background-color: var(--primary-color); color: #000;">
             {{ community?.name || 'Community' }}
           </div>
           <div class="p-3 ">
@@ -76,8 +81,8 @@
             </div>
 
             <button
-              class="w-full py-1 rounded-full border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              style="background-color: var(--primary-color);" @click="toggleJoin">
+              class="w-full py-1 rounded-full border text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              style="background-color: var(--primary-color); border-color: var(--border-color); color: #000;" @click="toggleJoin">
               <i class="fas" :class="isJoined ? 'fa-check' : 'fa-add'"></i>
               {{ isJoined ? 'Joined' : 'Join Community' }}
             </button>
