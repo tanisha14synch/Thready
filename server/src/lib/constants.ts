@@ -1,5 +1,5 @@
 /**
  * OAuth scopes requested from Shopify.
- * Adjust per app needs: read_customers, write_products, etc.
+ * Customer Account API + openid/email for login.
  */
-export const SHOPIFY_SCOPES = 'read_customers,read_orders'
+export const SHOPIFY_SCOPES = 'openid,email,customer-account-api:full'

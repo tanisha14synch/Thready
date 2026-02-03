@@ -75,6 +75,8 @@
         <a
           v-if="!mainStore.authToken"
           :href="shopifyAuthUrl"
+          target="_self"
+          rel="noopener noreferrer"
           class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
           style="background-color: var(--primary-color); color: #000;"
         >
@@ -122,9 +124,10 @@ const mainStore = useMainStore()
 const communityStore = useCommunityStore()
 
 const config = useRuntimeConfig()
-const apiBase = config.public.apiBase || 'http://localhost:3001'
 const shop = config.public.shopifyShop || 'thebarwardrobe.myshopify.com'
-const shopifyAuthUrl = `${apiBase}/auth?shop=${encodeURIComponent(shop)}`
+// Use same-origin /auth/shopify so we never hardcode a Shopify URL in the frontend.
+// Nitro GET /auth/shopify builds the Shopify login URL and redirects the browser; redirect_uri is our callback.
+const shopifyAuthUrl = `/auth/shopify?shop=${encodeURIComponent(shop)}`
 
 // Ensure communities are loaded when header mounts
 onMounted(async () => {
