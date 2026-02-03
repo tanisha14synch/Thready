@@ -1,93 +1,104 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { buildCustomerAccountAuthUrl, verifyState, verifyHmac, exchangeCodeForToken, createState, getShopFromState } from '../services/shopify-oauth.js'
+import type { FastifyInstance } from 'fastify'
+import { buildAuthUrl, verifyHmac, verifyState, createState, exchangeCodeForToken } from '../services/shopify-oauth.js'
 import { signJwt } from '../utils/jwt.js'
-
-const SHOP_SUFFIX = '.myshopify.com'
-
-function getBaseUrl(): string {
-  return process.env.BASE_URL || process.env.SHOPIFY_REDIRECT_URI?.replace(/\/auth\/shopify\/callback.*$/, '') || 'http://localhost:3001'
-}
-
-function getFrontendUrl(): string {
-  return process.env.FRONTEND_URL || 'http://localhost:3000'
-}
-
-function isValidShop(shop: string): boolean {
-  if (!shop || typeof shop !== 'string') return false
-  const s = shop.trim().toLowerCase()
-  return s.endsWith(SHOP_SUFFIX) && s.length > SHOP_SUFFIX.length
-}
 
 export default async function authRoutes(server: FastifyInstance) {
   /**
    * GET /auth?shop=xxx.myshopify.com
-   * Start OAuth: validate shop, build Shopify authorize URL, redirect (302).
+   * Redirects the browser to Shopify OAuth. Frontend "Log in with Shopify" links here.
    */
-  server.get('/auth', async (request: FastifyRequest<{ Querystring: { shop?: string } }>, reply: FastifyReply) => {
-    const shop = request.query.shop
-    if (!isValidShop(shop!)) {
-      return reply.redirect(getFrontendUrl() + '/?error=invalid_shop_param', 302)
+  server.get<{ Querystring: { shop?: string } }>('/auth', async (request, reply) => {
+    const shop = request.query.shop || process.env.SHOPIFY_SHOP || process.env.SHOPIFY_SHOP_DOMAIN
+    if (!shop || !shop.includes('myshopify.com')) {
+      return reply.code(400).send({ error: 'Missing or invalid shop. Use ?shop=your-store.myshopify.com' })
     }
-    try {
-      const state = createState(shop!)
-      const authUrl = buildCustomerAccountAuthUrl(state)
-      return reply.redirect(authUrl, 302)
-    } catch (err) {
-      server.log.error(err)
-      return reply.redirect(getFrontendUrl() + '/?error=auth_url_failed', 302)
-    }
+    const state = createState(shop)
+    const authUrl = buildAuthUrl(shop, state)
+    return reply.redirect(302, authUrl)
   })
 
   /**
-   * GET /auth/shopify/callback?code=...&shop=...&state=...&hmac=...
-   * Callback from Shopify: verify state/hmac, exchange code for token, then redirect to frontend with JWT.
+   * POST /auth/exchange
+   * Called by the frontend after Shopify redirects to /auth/shopify/callback with code, shop, hmac, state.
+   * Verifies HMAC and state, exchanges code for access token, stores Shop, returns JWT for localStorage.
    */
-  server.get(
-    '/auth/shopify/callback',
-    async (
-      request: FastifyRequest<{
-        Querystring: { code?: string; shop?: string; state?: string; hmac?: string }
-      }>,
-      reply: FastifyReply
-    ) => {
-      const { code, shop: shopQuery, state, hmac } = request.query
-      if (!code || !state) {
-        return reply.redirect(getFrontendUrl() + '/?error=missing_params', 302)
-      }
-      let shop = shopQuery
-      if (!shop || !isValidShop(shop)) {
-        shop = getShopFromState(state) || undefined
-      }
-      if (!shop || !isValidShop(shop)) {
-        return reply.redirect(getFrontendUrl() + '/?error=invalid_shop', 302)
-      }
-      const query = request.query as Record<string, string | undefined>
-      if (hmac && !verifyHmac(query)) {
-        return reply.redirect(getFrontendUrl() + '/?error=invalid_hmac', 302)
-      }
-      if (!verifyState(state, shop)) {
-        return reply.redirect(getFrontendUrl() + '/?error=invalid_state', 302)
-      }
-      try {
-        const { access_token } = await exchangeCodeForToken(shop, code)
-        const shopIdEnv = process.env.SHOPIFY_SHOP_ID || ''
-        const jwt = await signJwt({ shop, shopId: shopIdEnv })
-        const frontendCallback = getFrontendUrl() + '/auth/shopify/callback?token=' + encodeURIComponent(jwt)
-        return reply.redirect(frontendCallback, 302)
-      } catch (err) {
-        server.log.error(err)
-        return reply.redirect(getFrontendUrl() + '/?error=token_exchange_failed', 302)
-      }
+  server.post<{
+    Body: { code?: string; shop?: string; hmac?: string; state?: string }
+  }>('/auth/exchange', async (request, reply) => {
+    const { code, shop, hmac, state } = request.body || {}
+    if (!code || !shop) {
+      return reply.code(400).send({ error: 'Missing code or shop' })
     }
-  )
+
+    const query = { code, shop, hmac, state } as Record<string, string | undefined>
+    if (!verifyHmac(query)) {
+      return reply.code(401).send({ error: 'Invalid HMAC' })
+    }
+    if (!state || !verifyState(state, shop)) {
+      return reply.code(401).send({ error: 'Invalid or expired state' })
+    }
+
+    let accessToken: string
+    let scope: string | undefined
+    try {
+      const result = await exchangeCodeForToken(shop, code)
+      accessToken = result.access_token
+      scope = result.scope
+    } catch (err) {
+      server.log.error(err)
+      return reply.code(502).send({ error: 'Failed to exchange code for token' })
+    }
+
+    const cleanShop = shop.replace(/^https?:\/\//, '').replace(/\/$/, '')
+    const prisma = server.prisma
+
+    const shopRow = await prisma.shop.upsert({
+      where: { shop: cleanShop },
+      create: { shop: cleanShop, accessToken, scope },
+      update: { accessToken, scope, updatedAt: new Date() },
+    })
+
+    const jwt = await signJwt({ shop: cleanShop, shopId: shopRow.id })
+
+    const frontendUrl = process.env.FRONTEND_URL || process.env.COMMUNITY_URL || 'https://thready-ruby.vercel.app'
+    return reply.send({
+      jwt,
+      user: {
+        id: shopRow.id,
+        shop: cleanShop,
+        username: cleanShop.replace('.myshopify.com', ''),
+      },
+      redirectUrl: `${frontendUrl}/auth/shopify/callback?token=${encodeURIComponent(jwt)}`,
+    })
+  })
 
   /**
-   * GET /auth/me - return current user when Authorization: Bearer <jwt> is present.
+   * GET /auth/me
+   * Returns current user/shop from JWT in Authorization header. Frontend calls this to hydrate user after load.
    */
-  server.get('/auth/me', async (request: FastifyRequest, reply: FastifyReply) => {
-    const { getAuthUser } = await import('../utils/auth.js')
-    const auth = await getAuthUser(request)
-    if (!auth) return reply.code(401).send({ error: 'Unauthorized' })
-    return { user: { id: auth.userId, username: auth.username }, shop: auth.shop }
+  server.get('/auth/me', async (request, reply) => {
+    const authHeader = request.headers.authorization
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+    if (!token) {
+      return reply.code(401).send({ error: 'Missing or invalid Authorization header' })
+    }
+    const { verifyJwt } = await import('../utils/jwt.js')
+    const payload = await verifyJwt(token)
+    if (!payload) {
+      return reply.code(401).send({ error: 'Invalid or expired token' })
+    }
+    const shopRow = await server.prisma.shop.findUnique({
+      where: { id: payload.shopId },
+    })
+    if (!shopRow) {
+      return reply.code(401).send({ error: 'Shop not found' })
+    }
+    return reply.send({
+      user: {
+        id: shopRow.id,
+        shop: shopRow.shop,
+        username: shopRow.shop.replace('.myshopify.com', ''),
+      },
+    })
   })
 }

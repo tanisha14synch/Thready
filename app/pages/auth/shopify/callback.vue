@@ -41,7 +41,7 @@ onMounted(async () => {
       if (import.meta.client && window.history.replaceState) {
         window.history.replaceState({}, '', route.path)
       }
-      await router.replace('/profile')
+      await router.replace('/')
       return
     } catch (e) {
       error.value = 'Failed to load user. You can try again from home.'
@@ -78,11 +78,11 @@ onMounted(async () => {
     localStorage.setItem('auth_token', jwt)
     mainStore.setAuthSession({ user, token: jwt })
 
-    const redirectUrl = res?.redirectUrl || '/profile'
+    const redirectUrl = res?.redirectUrl || '/'
     if (redirectUrl.startsWith('http') && redirectUrl.includes('/auth/shopify/callback')) {
-      await router.replace('/profile')
+      await router.replace('/')
     } else {
-      await router.replace(redirectUrl.startsWith('http') ? '/profile' : redirectUrl)
+      await router.replace(redirectUrl.startsWith('http') ? '/' : redirectUrl)
     }
   } catch (e) {
     console.error(e)

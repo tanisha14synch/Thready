@@ -4,10 +4,7 @@ import { getShopifyHeaders, getShopifyUser } from '~/utils/shopify'
 import postsSeed from '../data/posts.json'
 
 export const usePostStore = defineStore('postStore', () => {
-  const getApiUrl = () =>
-    (typeof window !== 'undefined' && window.__API_BASE__ !== undefined)
-      ? window.__API_BASE__
-      : (import.meta.env?.VITE_API_BASE || import.meta.env?.NUXT_PUBLIC_API_BASE || '')
+  const API_URL = import.meta.env.VITE_API_BASE || import.meta.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001'
 
   // State
   const allPosts = ref([])
@@ -65,7 +62,7 @@ export const usePostStore = defineStore('postStore', () => {
         filter.value = null
         return
       }
-      const response = await fetch(`${getApiUrl()}/posts`, {
+      const response = await fetch(`${API_URL}/posts`, {
         headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to fetch posts')
@@ -101,8 +98,7 @@ export const usePostStore = defineStore('postStore', () => {
         filter.value = communityId
         return
       }
-      const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/posts?community=${communityId}`, {
+      const response = await fetch(`${API_URL}/posts?community=${communityId}`, {
         headers: getHeaders()
       })
       if (!response.ok) throw new Error('Failed to fetch posts')
@@ -161,7 +157,7 @@ export const usePostStore = defineStore('postStore', () => {
         return newPost
       }
       const user = getShopifyUser() || { id: 'demo-user', username: 'DemoUser', avatar: '/images/avatars/default-avatar.jpg' }
-      const response = await fetch(`${getApiUrl()}/posts`, {
+      const response = await fetch(`${API_URL}/posts`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
@@ -233,7 +229,7 @@ export const usePostStore = defineStore('postStore', () => {
       if (useLocal.value) {
         return
       }
-      const response = await fetch(`${getApiUrl()}/posts/${postId}/vote`, {
+      const response = await fetch(`${API_URL}/posts/${postId}/vote`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ value })
@@ -299,7 +295,7 @@ export const usePostStore = defineStore('postStore', () => {
             allPosts.value[postIndex] = { ...post }
             return
         }
-        const response = await fetch(`${getApiUrl()}/comments/${commentId}/vote`, {
+        const response = await fetch(`${API_URL}/comments/${commentId}/vote`, {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify({ value })
@@ -320,7 +316,7 @@ export const usePostStore = defineStore('postStore', () => {
       
       if (useLocal.value) throw new Error('local-mode')
 
-      const response = await fetch(`${getApiUrl()}/posts/${postId}/comments`, {
+      const response = await fetch(`${API_URL}/posts/${postId}/comments`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
@@ -392,7 +388,7 @@ export const usePostStore = defineStore('postStore', () => {
         }
         return
       }
-      const response = await fetch(`${getApiUrl()}/posts/${postId}`, {
+      const response = await fetch(`${API_URL}/posts/${postId}`, {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(updates)
@@ -439,7 +435,7 @@ export const usePostStore = defineStore('postStore', () => {
         allPosts.value = allPosts.value.filter(p => p.id !== postId)
         return
       }
-      const response = await fetch(`${getApiUrl()}/posts/${postId}`, {
+      const response = await fetch(`${API_URL}/posts/${postId}`, {
         method: 'DELETE',
         headers: getHeaders()
       })
@@ -475,7 +471,7 @@ export const usePostStore = defineStore('postStore', () => {
             }
             return
         }
-        const response = await fetch(`${getApiUrl()}/comments/${commentId}`, {
+        const response = await fetch(`${API_URL}/comments/${commentId}`, {
             method: 'PUT',
             headers: getHeaders(),
             body: JSON.stringify({ text })
@@ -529,7 +525,7 @@ export const usePostStore = defineStore('postStore', () => {
             }
             return
         }
-        const response = await fetch(`${getApiUrl()}/comments/${commentId}`, {
+        const response = await fetch(`${API_URL}/comments/${commentId}`, {
             method: 'DELETE',
             headers: getHeaders()
         })

@@ -7,18 +7,14 @@ export const useCommunityStore = defineStore('communityStore', () => {
   const loading = ref(false)
   const error = ref(null)
   
-  const getApiUrl = () =>
-    (typeof window !== 'undefined' && window.__API_BASE__ !== undefined)
-      ? window.__API_BASE__
-      : (import.meta.env?.VITE_API_BASE || import.meta.env?.NUXT_PUBLIC_API_BASE || '')
+  const API_URL = import.meta.env.VITE_API_BASE || import.meta.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001'
 
-  // Fetch communities from backend (or same-origin Nitro route when apiBase is empty)
+  // Fetch communities from backend
   const fetchCommunities = async () => {
     loading.value = true
     error.value = null
     try {
-      const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/communities`)
+      const response = await fetch(`${API_URL}/communities`)
       if (!response.ok) throw new Error('Failed to fetch communities')
       const data = await response.json()
       
@@ -45,8 +41,7 @@ export const useCommunityStore = defineStore('communityStore', () => {
     loading.value = true
     error.value = null
     try {
-      const apiUrl = getApiUrl()
-      const response = await fetch(`${apiUrl}/communities/${communityId}`)
+      const response = await fetch(`${API_URL}/communities/${communityId}`)
       if (!response.ok) throw new Error('Failed to fetch community')
       const data = await response.json()
       

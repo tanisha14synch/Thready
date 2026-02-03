@@ -5,35 +5,8 @@ const clientId = process.env.SHOPIFY_CLIENT_ID!
 const clientSecret = process.env.SHOPIFY_API_SECRET!
 const redirectUri = process.env.SHOPIFY_REDIRECT_URI || process.env.CALLBACK_URL!
 
-/** Shopify Customer Account Shop ID (for shopify.com/authentication/{id}/login). */
-const shopId = process.env.SHOPIFY_SHOP_ID || ''
-
 /**
- * Build the Shopify Customer Account login URL.
- * User is redirected to https://shopify.com/authentication/{shopId}/login (Customer Account flow).
- */
-export function buildCustomerAccountAuthUrl(state: string): string {
-  if (!shopId) {
-    throw new Error('SHOPIFY_SHOP_ID is required for Customer Account login')
-  }
-  const nonce = crypto.randomBytes(16).toString('hex')
-  const params = new URLSearchParams({
-    client_id: clientId,
-    locale: 'en',
-    redirect_uri: redirectUri,
-    response_type: 'code',
-    scope: SHOPIFY_SCOPES,
-    state,
-    nonce,
-  })
-  const regionCountry = process.env.SHOPIFY_REGION_COUNTRY || 'IN'
-  params.set('region_country', regionCountry)
-  return `https://shopify.com/authentication/${shopId}/login?${params.toString()}`
-}
-
-/**
- * Build the Shopify Admin API OAuth authorization URL (legacy).
- * User is redirected here to approve the app.
+ * Build the Shopify OAuth authorization URL. User is redirected here to approve the app.
  */
 export function buildAuthUrl(shop: string, state: string): string {
   const params = new URLSearchParams({
@@ -81,19 +54,6 @@ export function verifyState(state: string, shop: string): boolean {
     return stateShop === shop
   } catch {
     return false
-  }
-}
-
-/** Decode shop from our signed state (for Customer Account callback when shop is not in query). */
-export function getShopFromState(state: string): string | null {
-  try {
-    const decoded = JSON.parse(Buffer.from(state, 'base64url').toString()) as { p: string; s: string }
-    const signature = crypto.createHmac('sha256', clientSecret).update(decoded.p).digest('hex')
-    if (signature !== decoded.s) return null
-    const [stateShop] = decoded.p.split(':')
-    return stateShop || null
-  } catch {
-    return null
   }
 }
 
